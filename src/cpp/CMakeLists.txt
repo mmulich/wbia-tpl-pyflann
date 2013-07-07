@@ -88,10 +88,6 @@ if (BUILD_C_BINDINGS)
         target_link_libraries(flann -Wl,-whole-archive flann_s -Wl,-no-whole-archive)
     else()
         add_library(flann SHARED ${C_SOURCES})
-
-        if(MINGW)
-          target_link_libraries(flann -lgomp)
-        endif(MINGW)
     endif()
 
     set_target_properties(flann PROPERTIES

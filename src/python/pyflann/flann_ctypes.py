@@ -52,8 +52,6 @@ class CustomStructure(Structure):
         for k,v in dict.items():
             if k in self.__field_names:
                 setattr(self,k,self.__translate(k,v))
-            else:
-                raise KeyError("No such member: "+k)
     
     def __getitem__(self, k):
         if k in self.__field_names:
@@ -140,12 +138,21 @@ allowed_types = [ float32, float64, uint8, int32]
 
 FLANN_INDEX = c_void_p
 
-def load_flann_library():
+def load_flann_library(): 
 
-    root_dir = os.path.abspath(os.path.dirname(__file__))
+    # Hotspotter specific stuff
+    # Try it. See if it works
+    try: 
+        print("Loading HotSpotter's FLANN version")
+        from hotspotter.standalone import find_hotspotter_root_dir
+        root_dir = find_hotspotter_root_dir()
+        libdir = os.path.normpath(root_dir+'/hotspotter/tpl/lib/'+sys.platform)
+    except Exception as ex: 
+        print("Failed to find HotSpotter! FLANN is attempting to recover")
+        root_dir = os.path.abspath(os.path.dirname(__file__))
+        libdir = 'lib'
     
     libnames = ['libflann.so']
-    libdir = 'lib'
     if sys.platform == 'win32':
         libnames = ['flann.dll', 'libflann.dll']
     elif sys.platform == 'darwin':
@@ -154,15 +161,24 @@ def load_flann_library():
     while root_dir!=None:
         for libname in libnames:
             try:
-                #print "Trying ",os.path.join(root_dir,'lib',libname)
-                flannlib = cdll[os.path.join(root_dir,libdir,libname)]
+                try_path = os.path.normpath(os.path.join(root_dir, libdir, libname))
+                #print "Try to open FLANN library located at: ", try_path
+                flannlib = cdll[try_path]
+                print(' ... FLANN libname = '+str(try_path))
                 return flannlib
-            except Exception:
-                pass
+            except Exception as ex:
+                #print " ... encountered exception"
+                #print(repr(ex))
+                pass 
             try:
-                flannlib = cdll[os.path.join(root_dir,"build",libdir,libname)]
+                try_path = os.path.normpath(os.path.join(root_dir,"build",libdir,libname))
+                #print "Try to open FLANN library located at: ", try_path
+                flannlib = cdll[try_path]
+                print(' ... FLANN libname = '+str(try_path))
                 return flannlib
-            except Exception:
+            except Exception as ex:
+                #print " ... encountered exception"
+                #print(repr(ex))
                 pass
         tmp = os.path.dirname(root_dir)
         if tmp == root_dir:
@@ -174,12 +190,14 @@ def load_flann_library():
     # a full path as a last resort
     for libname in libnames:
         try:
-            #print "Trying",libname
+            #print "Try to open FLANN library located at: ", libname
             flannlib=cdll[libname]
+            print(' ... FLANN libname = '+str(libname))
             return flannlib
-        except:
+        except Exception as ex:
+            #print " ... encountered exception"
+            #print(repr(ex))
             pass
-
     return None
 
 flannlib = load_flann_library()
@@ -224,6 +242,21 @@ flannlib.flann_build_index_%(C)s.argtypes = [
 ]
 flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
 """)
+
+flann.add_points = {}
+define_functions(r"""
+flannlib.flann_add_points_%(C)s.restype = None
+flannlib.flann_add_points_%(C)s.argtypes = [ 
+        FLANN_INDEX, # index_id
+        ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
+        c_int, # rows
+        c_int, # cols
+        c_int, # rebuild_threshhold
+]
+flann.add_points[%(numpy)s] = flannlib.flann_add_points_%(C)s
+""")
+
+
 
 flann.save_index = {}
 define_functions(r"""

@@ -59,7 +59,7 @@ inline void log_verbosity(int level)
 }
 
 /**
- * Index parameters for creating a saved index.
+ * (Deprecated) Index parameters for creating a saved index.
  */
 struct SavedIndexParams : public IndexParams
 {

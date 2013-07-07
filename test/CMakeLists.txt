@@ -64,9 +64,8 @@ if (GTEST_FOUND AND HDF5_FOUND AND BUILD_CUDA_LIB)
 	target_link_libraries(flann_cuda_test flann_cpp ${HDF5_LIBRARIES} flann_cuda)
 endif()
 
-
 #---------- pyunit tests --------------
-if (BUILD_PYTHON_BINDINGS) 
+if (PYTHON_EXECUTABLE) 
     flann_add_pyunit(test_nn.py)
     flann_add_pyunit(test_nn_index.py)
     flann_add_pyunit(test_index_save.py)
