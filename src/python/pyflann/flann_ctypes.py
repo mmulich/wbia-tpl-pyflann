@@ -139,18 +139,7 @@ allowed_types = [ float32, float64, uint8, int32]
 FLANN_INDEX = c_void_p
 
 def load_flann_library(): 
-
-    # Hotspotter specific stuff
-    # Try it. See if it works
-    try: 
-        print("Loading HotSpotter's FLANN version")
-        from hotspotter.standalone import find_hotspotter_root_dir
-        root_dir = find_hotspotter_root_dir()
-        libdir = os.path.normpath(root_dir+'/hotspotter/tpl/lib/'+sys.platform)
-    except Exception as ex: 
-        print("Failed to find HotSpotter! FLANN is attempting to recover")
-        root_dir = os.path.abspath(os.path.dirname(__file__))
-        libdir = 'lib'
+    root_dir = os.path.abspath(os.path.dirname(__file__))
     
     libnames = ['libflann.so']
     if sys.platform == 'win32':
@@ -158,46 +147,57 @@ def load_flann_library():
     elif sys.platform == 'darwin':
         libnames = ['libflann.dylib']
 
-    while root_dir!=None:
-        for libname in libnames:
-            try:
-                try_path = os.path.normpath(os.path.join(root_dir, libdir, libname))
-                #print "Try to open FLANN library located at: ", try_path
-                flannlib = cdll[try_path]
-                print(' ... FLANN libname = '+str(try_path))
-                return flannlib
-            except Exception as ex:
-                #print " ... encountered exception"
-                #print(repr(ex))
-                pass 
-            try:
-                try_path = os.path.normpath(os.path.join(root_dir,"build",libdir,libname))
-                #print "Try to open FLANN library located at: ", try_path
-                flannlib = cdll[try_path]
-                print(' ... FLANN libname = '+str(try_path))
-                return flannlib
-            except Exception as ex:
-                #print " ... encountered exception"
-                #print(repr(ex))
-                pass
-        tmp = os.path.dirname(root_dir)
-        if tmp == root_dir:
-            root_dir = None
-        else:
-            root_dir = tmp
-
-    # if we didn't find the library so far, try loading without
-    # a full path as a last resort
-    for libname in libnames:
+    tried_to_load = []
+    ttl_ex_list = []
+    def try_load_flann(libpath):
         try:
-            #print "Try to open FLANN library located at: ", libname
-            flannlib=cdll[libname]
-            print(' ... FLANN libname = '+str(libname))
+            try_path = os.path.normpath(libpath)
+            tried_to_load.append(try_path)
+            flannlib = cdll[try_path]
+            print(' ... Found FLANN Library: '+str(try_path))
             return flannlib
         except Exception as ex:
-            #print " ... encountered exception"
-            #print(repr(ex))
-            pass
+            ttl_ex_list.append(ex)
+
+    while root_dir!=None:
+        for libname in libnames:
+            # Try 1
+            flannlib = try_load_flann(os.path.join(root_dir, libname))
+            if not flannlib is None: 
+                return flannlib
+            # Try 2
+            flannlib = try_load_flann(os.path.join(root_dir, 'lib', libname))
+            if not flannlib is None: 
+                return flannlib
+            # Try 3
+            flannlib = try_load_flann(os.path.join(root_dir, 'build', 'lib', libname))
+            if not flannlib is None: 
+                return flannlib
+
+        # Go down directories to find libflann
+        _new_root = os.path.dirname(root_dir)
+        if _new_root == root_dir:
+            root_dir = None
+            break
+        else:
+            root_dir = _new_root
+
+    print('FLANN is not in any known absolute paths. Tried: ')
+    for tried_path, tried_ex in zip(tried_to_load,ttl_ex_list):
+        print('PATH: '+tried_path)
+        print('Exception: '+repr(tried_exception))
+        print('------')
+
+    print('Trying relative paths as last resort')
+    for libname in libnames:
+        flannlib = try_load_flann(os.path.join(libname))
+        if not flannlib is None: return flannlib
+        flannlib = try_load_flann(os.path.join('lib', libname))
+        if not flannlib is None: return flannlib
+        flannlib = try_load_flann(os.path.join('build', 'lib', libname))
+        if not flannlib is None: return flannlib
+
+    print('Failed to load FLANN')
     return None
 
 flannlib = load_flann_library()
