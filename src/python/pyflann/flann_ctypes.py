@@ -24,11 +24,13 @@
 #(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ctypes import *
+from ctypes import *  # TODO: * imports are bad and should be removed
+import ctypes as C
 #from ctypes.util import find_library
 from numpy import float32, float64, uint8, int32, matrix, array, empty, reshape, require
 from numpy.ctypeslib import load_library, ndpointer
 import os
+from os.path import join, exists, abspath, dirname, normpath
 import sys
 
 STRING = c_char_p
@@ -42,42 +44,43 @@ class CustomStructure(Structure):
     """
     _defaults_ = {}
     _translation_ = {}
-    
+
     def __init__(self):
         Structure.__init__(self)
-        self.__field_names = [ f for (f,t) in self._fields_]
-        self.update(self._defaults_)    
-    
+        self.__field_names = [f for (f, t) in self._fields_]
+        self.update(self._defaults_)
+
     def update(self, dict):
-        for k,v in dict.items():
+        for k, v in dict.items():
             if k in self.__field_names:
-                setattr(self,k,self.__translate(k,v))
-    
+                setattr(self, k, self.__translate(k, v))
+
     def __getitem__(self, k):
         if k in self.__field_names:
-            return self.__translate_back(k,getattr(self,k))
-        
+            return self.__translate_back(k, getattr(self, k))
+
     def __setitem__(self, k, v):
         if k in self.__field_names:
-            setattr(self,k,self.__translate(k,v))
+            setattr(self, k, self.__translate(k, v))
         else:
-            raise KeyError("No such member: "+k)
-    
-    def keys(self):
-        return self.__field_names 
+            raise KeyError("No such member: " + k)
 
-    def __translate(self,k,v):
+    def keys(self):
+        return self.__field_names
+
+    def __translate(self, k, v):
         if k in self._translation_:
             if v in self._translation_[k]:
                 return self._translation_[k][v]
-        return v        
+        return v
 
-    def __translate_back(self,k,v):
+    def __translate_back(self, k, v):
         if k in self._translation_:
-            for tk,tv in self._translation_[k].items():
-                if tv==v:
+            for tk, tv in self._translation_[k].items():
+                if tv == v:
                     return tk
-        return v        
+        return v
+
 
 class FLANNParameters(CustomStructure):
     _fields_ = [
@@ -104,74 +107,143 @@ class FLANNParameters(CustomStructure):
         ('random_seed', c_long),
     ]
     _defaults_ = {
-        'algorithm' : 'kdtree',
-        'checks' : 32,
-        'eps' : 0.0,
-        'sorted' : 1,
-        'max_neighbors' : -1,
-        'cores' : 0,
-        'trees' : 1,
-        'leaf_max_size' : 4,
-        'branching' : 32,
-        'iterations' : 5,
-        'centers_init' : 'random',
-        'cb_index' : 0.5,
-        'target_precision' : 0.9,
-        'build_weight' : 0.01,
-        'memory_weight' : 0.0,
-        'sample_fraction' : 0.1,
+        'algorithm': 'kdtree',
+        'checks': 32,
+        'eps': 0.0,
+        'sorted': 1,
+        'max_neighbors': -1,
+        'cores': 0,
+        'trees': 1,
+        'leaf_max_size': 4,
+        'branching': 32,
+        'iterations': 5,
+        'centers_init': 'random',
+        'cb_index': 0.5,
+        'target_precision': 0.9,
+        'build_weight': 0.01,
+        'memory_weight': 0.0,
+        'sample_fraction': 0.1,
         'table_number_': 12,
         'key_size_': 20,
         'multi_probe_level_': 2,
-        'log_level' : "warning",
-        'random_seed' : -1
-  }
-    _translation_ = {
-            "algorithm"     : {"linear"    : 0, "kdtree"    : 1, "kmeans"    : 2, "composite" : 3, "kdtree_single" : 4, "hierarchical": 5, "lsh": 6, "saved": 254, "autotuned" : 255, "default"   : 1},
-        "centers_init"  : {"random"    : 0, "gonzales"  : 1, "kmeanspp"  : 2, "default"   : 0},
-        "log_level"     : {"none"      : 0, "fatal"     : 1, "error"     : 2, "warning"   : 3, "info"      : 4, "default"   : 2}
+        'log_level': "warning",
+        'random_seed': -1
     }
-    
-    
+    _translation_ = {
+        "algorithm": {"linear": 0, "kdtree": 1, "kmeans": 2, "composite": 3,
+                      "kdtree_single": 4, "hierarchical": 5, "lsh": 6, "saved":
+                      254, "autotuned": 255, "default": 1},
+        "centers_init": {"random": 0, "gonzales": 1, "kmeanspp": 2, "default": 0},
+        "log_level": {"none": 0, "fatal": 1, "error": 2, "warning": 3, "info": 4, "default": 2}
+    }
+
+
 default_flags = ['C_CONTIGUOUS', 'ALIGNED']
-allowed_types = [ float32, float64, uint8, int32]   
+allowed_types = [ float32, float64, uint8, int32]
 
 FLANN_INDEX = c_void_p
 
-def load_flann_library(): 
+
+def get_lib_fname_list(libname):
+    'returns possible library names given the platform'
+    if sys.platform == 'win32':
+        libnames = ['lib' + libname + '.dll', libname + '.dll']
+    elif sys.platform == 'darwin':
+        libnames = ['lib' + libname + '.dylib']
+    elif sys.platform == 'linux2':
+        libnames = ['lib' + libname + '.so']
+    else:
+        raise Exception('Unknown operating system: %s' % sys.platform)
+    return libnames
+
+
+def get_lib_dpath_list(root_dir):
+    'returns possible lib locations'
+    get_lib_dpath_list = [root_dir,
+                          join(root_dir, 'lib'),
+                          join(root_dir, 'build'),
+                          join(root_dir, 'build', 'lib')]
+    return get_lib_dpath_list
+
+
+def find_lib_fpath(libname, root_dir, recurse_down=True):
+    lib_fname_list = get_lib_fname_list(libname)
+    tried_list = []
+    while root_dir is not None:
+        for lib_fname in lib_fname_list:
+            for lib_dpath in get_lib_dpath_list(root_dir):
+                lib_fpath = normpath(join(lib_dpath, lib_fname))
+                #print('testing: %r' % lib_fpath)
+                tried_list.append(lib_fpath)
+                if exists(lib_fpath):
+                    print('using: %r' % lib_fpath)
+                    return lib_fpath
+            _new_root = dirname(root_dir)
+            if _new_root == root_dir:
+                root_dir = None
+                break
+            else:
+                root_dir = _new_root
+        if not recurse_down:
+            break
+    raise ImportError('Cannot find dynamic library. Tried: %r' % tried_list)
+
+
+def load_library2(libname, root_dir):
+    lib_fpath = find_lib_fpath(libname, root_dir)
+    try:
+        clib = C.cdll[lib_fpath]
+    except Exception as ex:
+        print('Caught exception: %r' % ex)
+        raise ImportError('Cannot load dynamic library. Did you compile FLANN?')
+    return clib
+
+
+def load_flann_library():
+    try:
+        root_dir = abspath(dirname(__file__))
+    except NameError as ex:
+        print(ex)
+        raise
+    # root_dir = abspath(dirname(os.getcwd()))
+    flannlib = load_library2('flann', root_dir)
+    return flannlib
+
+    '''
     root_dir = os.path.abspath(os.path.dirname(__file__))
-    
+
     libnames = ['libflann.so']
     if sys.platform == 'win32':
-        libnames = ['flann.dll', 'libflann.dll']
+        libnames = ['libflann.dll', 'flann.dll']
     elif sys.platform == 'darwin':
         libnames = ['libflann.dylib']
 
     tried_to_load = []
     ttl_ex_list = []
+
     def try_load_flann(libpath):
         try:
             try_path = os.path.normpath(libpath)
             tried_to_load.append(try_path)
             flannlib = cdll[try_path]
-            print(' ... Found FLANN Library: '+str(try_path))
+            #print(' ... Found FLANN Library: '+str(try_path))
             return flannlib
         except Exception as ex:
             ttl_ex_list.append(ex)
 
-    while root_dir!=None:
+    while root_dir is not None:
         for libname in libnames:
             # Try 1
-            flannlib = try_load_flann(os.path.join(root_dir, libname))
-            if not flannlib is None: 
+            flannlib = try_load_flann(os.path.join(root_dir, 'lib', libname))
+            if not flannlib is None:
                 return flannlib
             # Try 2
-            flannlib = try_load_flann(os.path.join(root_dir, 'lib', libname))
-            if not flannlib is None: 
+            flannlib = try_load_flann(os.path.join(root_dir, libname))
+            if not flannlib is None:
                 return flannlib
             # Try 3
             flannlib = try_load_flann(os.path.join(root_dir, 'build', 'lib', libname))
-            if not flannlib is None: 
+            if not flannlib is None:
                 return flannlib
 
         # Go down directories to find libflann
@@ -183,42 +255,48 @@ def load_flann_library():
             root_dir = _new_root
 
     print('FLANN is not in any known absolute paths. Tried: ')
-    for tried_path, tried_ex in zip(tried_to_load,ttl_ex_list):
-        print('PATH: '+tried_path)
-        print('Exception: '+repr(tried_exception))
+    for tried_path, tried_ex in zip(tried_to_load, ttl_ex_list):
+        print('PATH: ' + tried_path)
+        print('Exception: ' + repr(tried_ex))
         print('------')
 
     print('Trying relative paths as last resort')
     for libname in libnames:
         flannlib = try_load_flann(os.path.join(libname))
-        if not flannlib is None: return flannlib
+        if not flannlib is None:
+            return flannlib
         flannlib = try_load_flann(os.path.join('lib', libname))
-        if not flannlib is None: return flannlib
+        if not flannlib is None:
+            return flannlib
         flannlib = try_load_flann(os.path.join('build', 'lib', libname))
-        if not flannlib is None: return flannlib
+        if not flannlib is None:
+            return flannlib
 
     print('Failed to load FLANN')
     return None
+    '''
 
 flannlib = load_flann_library()
-if flannlib == None:
+if flannlib is None:
     raise ImportError('Cannot load dynamic library. Did you compile FLANN?')
 
-class FlannLib: pass
+
+class FlannLib:
+    pass
 flann = FlannLib()
 
 
 flannlib.flann_log_verbosity.restype = None
-flannlib.flann_log_verbosity.argtypes = [ 
+flannlib.flann_log_verbosity.argtypes = [
         c_int # level
 ]
 
 
 
 flannlib.flann_set_distance_type.restype = None
-flannlib.flann_set_distance_type.argtypes = [ 
+flannlib.flann_set_distance_type.argtypes = [
         c_int,
-        c_int,        
+        c_int,
 ]
 
 type_mappings = ( ('float','float32'),
@@ -233,11 +311,11 @@ def define_functions(str):
 flann.build_index = {}
 define_functions(r"""
 flannlib.flann_build_index_%(C)s.restype = FLANN_INDEX
-flannlib.flann_build_index_%(C)s.argtypes = [ 
+flannlib.flann_build_index_%(C)s.argtypes = [
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int, # rows
         c_int, # cols
-        POINTER(c_float), # speedup 
+        POINTER(c_float), # speedup
         POINTER(FLANNParameters)  # flann_params
 ]
 flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
@@ -246,7 +324,7 @@ flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
 flann.add_points = {}
 define_functions(r"""
 flannlib.flann_add_points_%(C)s.restype = None
-flannlib.flann_add_points_%(C)s.argtypes = [ 
+flannlib.flann_add_points_%(C)s.argtypes = [
         FLANN_INDEX, # index_id
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int, # rows
@@ -263,8 +341,8 @@ define_functions(r"""
 flannlib.flann_save_index_%(C)s.restype = None
 flannlib.flann_save_index_%(C)s.argtypes = [
         FLANN_INDEX, # index_id
-        c_char_p #filename                                   
-] 
+        c_char_p #filename
+]
 flann.save_index[%(numpy)s] = flannlib.flann_save_index_%(C)s
 """)
 
@@ -272,7 +350,7 @@ flann.load_index = {}
 define_functions(r"""
 flannlib.flann_load_index_%(C)s.restype = FLANN_INDEX
 flannlib.flann_load_index_%(C)s.argtypes = [
-        c_char_p, #filename                                   
+        c_char_p, #filename
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int, # rows
         c_int, # cols
@@ -280,10 +358,10 @@ flannlib.flann_load_index_%(C)s.argtypes = [
 flann.load_index[%(numpy)s] = flannlib.flann_load_index_%(C)s
 """)
 
-flann.find_nearest_neighbors = {}    
-define_functions(r"""                          
+flann.find_nearest_neighbors = {}
+define_functions(r"""
 flannlib.flann_find_nearest_neighbors_%(C)s.restype = c_int
-flannlib.flann_find_nearest_neighbors_%(C)s.argtypes = [ 
+flannlib.flann_find_nearest_neighbors_%(C)s.argtypes = [
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int, # rows
         c_int, # cols
@@ -300,7 +378,7 @@ flann.find_nearest_neighbors[%(numpy)s] = flannlib.flann_find_nearest_neighbors_
 # fix definition for the 'double' case
 
 flannlib.flann_find_nearest_neighbors_double.restype = c_int
-flannlib.flann_find_nearest_neighbors_double.argtypes = [ 
+flannlib.flann_find_nearest_neighbors_double.argtypes = [
         ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int, # rows
         c_int, # cols
@@ -317,7 +395,7 @@ flann.find_nearest_neighbors[float64] = flannlib.flann_find_nearest_neighbors_do
 flann.find_nearest_neighbors_index = {}
 define_functions(r"""
 flannlib.flann_find_nearest_neighbors_index_%(C)s.restype = c_int
-flannlib.flann_find_nearest_neighbors_index_%(C)s.argtypes = [ 
+flannlib.flann_find_nearest_neighbors_index_%(C)s.argtypes = [
         FLANN_INDEX, # index_id
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # testset
         c_int,  # tcount
@@ -330,7 +408,7 @@ flann.find_nearest_neighbors_index[%(numpy)s] = flannlib.flann_find_nearest_neig
 """)
 
 flannlib.flann_find_nearest_neighbors_index_double.restype = c_int
-flannlib.flann_find_nearest_neighbors_index_double.argtypes = [ 
+flannlib.flann_find_nearest_neighbors_index_double.argtypes = [
         FLANN_INDEX, # index_id
         ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # testset
         c_int,  # tcount
@@ -344,7 +422,7 @@ flann.find_nearest_neighbors_index[float64] = flannlib.flann_find_nearest_neighb
 flann.radius_search = {}
 define_functions(r"""
 flannlib.flann_radius_search_%(C)s.restype = c_int
-flannlib.flann_radius_search_%(C)s.argtypes = [ 
+flannlib.flann_radius_search_%(C)s.argtypes = [
         FLANN_INDEX, # index_id
         ndpointer(%(numpy)s, ndim = 1, flags='aligned, c_contiguous'), # query
         ndpointer(int32, ndim = 1, flags='aligned, c_contiguous, writeable'), # indices
@@ -357,7 +435,7 @@ flann.radius_search[%(numpy)s] = flannlib.flann_radius_search_%(C)s
 """)
 
 flannlib.flann_radius_search_double.restype = c_int
-flannlib.flann_radius_search_double.argtypes = [ 
+flannlib.flann_radius_search_double.argtypes = [
         FLANN_INDEX, # index_id
         ndpointer(float64, ndim = 1, flags='aligned, c_contiguous'), # query
         ndpointer(int32, ndim = 1, flags='aligned, c_contiguous, writeable'), # indices
@@ -372,11 +450,11 @@ flann.radius_search[float64] = flannlib.flann_radius_search_double
 flann.compute_cluster_centers = {}
 define_functions(r"""
 flannlib.flann_compute_cluster_centers_%(C)s.restype = c_int
-flannlib.flann_compute_cluster_centers_%(C)s.argtypes = [ 
+flannlib.flann_compute_cluster_centers_%(C)s.argtypes = [
         ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int,  # rows
         c_int,  # cols
-        c_int,  # clusters 
+        c_int,  # clusters
         ndpointer(float32, flags='aligned, c_contiguous, writeable'), # result
         POINTER(FLANNParameters)  # flann_params
 ]
@@ -384,11 +462,11 @@ flann.compute_cluster_centers[%(numpy)s] = flannlib.flann_compute_cluster_center
 """)
 # double is an exception
 flannlib.flann_compute_cluster_centers_double.restype = c_int
-flannlib.flann_compute_cluster_centers_double.argtypes = [ 
+flannlib.flann_compute_cluster_centers_double.argtypes = [
         ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # dataset
         c_int,  # rows
         c_int,  # cols
-        c_int,  # clusters 
+        c_int,  # clusters
         ndpointer(float64, flags='aligned, c_contiguous, writeable'), # result
         POINTER(FLANNParameters)  # flann_params
 ]
@@ -398,7 +476,7 @@ flann.compute_cluster_centers[float64] = flannlib.flann_compute_cluster_centers_
 flann.free_index = {}
 define_functions(r"""
 flannlib.flann_free_index_%(C)s.restype = None
-flannlib.flann_free_index_%(C)s.argtypes = [ 
+flannlib.flann_free_index_%(C)s.argtypes = [
         FLANN_INDEX,  # index_id
         POINTER(FLANNParameters) # flann_params
 ]
@@ -407,7 +485,7 @@ flann.free_index[%(numpy)s] = flannlib.flann_free_index_%(C)s
 
 
 def ensure_2d_array(array, flags, **kwargs):
-    array = require(array, requirements = flags, **kwargs) 
+    array = require(array, requirements = flags, **kwargs)
     if len(array.shape) == 1:
         array = array.reshape(-1,array.size)
     return array
