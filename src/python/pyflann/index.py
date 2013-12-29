@@ -37,7 +37,7 @@ def set_distance_type(distance_type, order = 0):
     hik, hellinger, cs, kl.
     """
     
-    distance_translation = { "euclidean" : 1, 
+    distance_translation = {"euclidean" : 1, 
                             "manhattan" : 2, 
                             "minkowski" : 3,
                             "max_dist" : 4,
@@ -47,6 +47,10 @@ def set_distance_type(distance_type, order = 0):
                             "cs" : 7,
                             "kullback_leibler" : 8,
                             "kl" : 8,
+                            "hamming"     		: 9,
+                            "hamming_lut"		: 10,
+                            "hamming_popcnt"   	: 11,
+                            "l2_simple"   		: 12,
                             }
     if type(distance_type)==str:
         distance_type = distance_translation[distance_type]

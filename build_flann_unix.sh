@@ -5,4 +5,4 @@ cd build
 cmake -G "Unix Makefiles" ..
 
 make
-make install
+sudo make install
