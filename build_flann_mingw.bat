@@ -1,3 +1,8 @@
+PUSHD %1
+call :BuildFlann
+call :Exit
+
+:BuildFlann
 :: helper variables
 set INSTALL32=C:\Program Files (x86)
 set FLANN_INSTALL="%INSTALL32%\Flann"
@@ -6,7 +11,7 @@ set CMAKE_GUI_EXE="%INSTALL32%\CMake 2.8\bin\cmake-gui.exe"
 
 
 cd %code%\flann
-rm -rf %code%\flann\build
+:: rm -rf %code%\flann\build
 mkdir %code%\flann\build
 cd %code%\flann\build
 
@@ -24,6 +29,11 @@ cd %code%\flann\build
  %code%\flann
 
 :: make command that doesn't freeze on mingw
+echo "BUILDING FLANN TAKES AWHILE. BE PATIENT."
 :: mingw32-make -j7 "MAKE=mingw32-make -j3" -f CMakeFiles\Makefile2 all
-echo "THIS WILL TAKE AWHILE!!!"
+
 make
+make install
+
+:Exit
+POPD

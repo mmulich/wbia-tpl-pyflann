@@ -30,7 +30,7 @@ import ctypes as C
 from numpy import float32, float64, uint8, int32, matrix, array, empty, reshape, require
 from numpy.ctypeslib import load_library, ndpointer
 import os
-from os.path import join, exists, abspath, dirname, normpath
+from os.path import join, exists, realpath, dirname, normpath
 import sys
 
 STRING = c_char_p
@@ -169,16 +169,23 @@ def get_lib_dpath_list(root_dir):
 def find_lib_fpath(libname, root_dir, recurse_down=True):
     lib_fname_list = get_lib_fname_list(libname)
     tried_list = []
+    count = 0
     while root_dir is not None:
         for lib_fname in lib_fname_list:
             for lib_dpath in get_lib_dpath_list(root_dir):
                 lib_fpath = normpath(join(lib_dpath, lib_fname))
+                lib_fpath = lib_fpath.replace('HOTSPO~1', 'hotspotter')
                 #print('testing: %r' % lib_fpath)
                 tried_list.append(lib_fpath)
                 if exists(lib_fpath):
                     print('using: %r' % lib_fpath)
                     return lib_fpath
             _new_root = dirname(root_dir)
+            count += 1
+            if count > 5:
+                print('not checking after 5 directories')
+                root_dir = None
+                break
             if _new_root == root_dir:
                 root_dir = None
                 break
@@ -201,11 +208,11 @@ def load_library2(libname, root_dir):
 
 def load_flann_library():
     try:
-        root_dir = abspath(dirname(__file__))
+        root_dir = realpath(dirname(__file__))
     except NameError as ex:
         print(ex)
         raise
-    # root_dir = abspath(dirname(os.getcwd()))
+    # root_dir = realpath(dirname(os.getcwd()))
     flannlib = load_library2('flann', root_dir)
     return flannlib
 
