@@ -180,20 +180,22 @@ def find_lib_fpath(libname, root_dir, recurse_down=True):
                 if exists(lib_fpath):
                     print('using: %r' % lib_fpath)
                     return lib_fpath
-            _new_root = dirname(root_dir)
-            count += 1
-            if count > 5:
-                print('not checking after 5 directories')
-                root_dir = None
-                break
-            if _new_root == root_dir:
-                root_dir = None
-                break
-            else:
-                root_dir = _new_root
+        _new_root = dirname(root_dir)
+        count += 1
+        if count > 5:
+            print('not checking after 5 directories')
+            root_dir = None
+            break
+        if _new_root == root_dir:
+            root_dir = None
+            break
+        else:
+            root_dir = _new_root
         if not recurse_down:
             break
-    raise ImportError('Cannot find dynamic library. Tried: %r' % tried_list)
+    failed_paths = '\n * '.join(tried_list)
+    raise ImportError('Cannot find dynamic library. Tried: %s' %
+                      failed_paths)
 
 
 def load_library2(libname, root_dir):
