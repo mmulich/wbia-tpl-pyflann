@@ -1,4 +1,4 @@
-cd ~\code\flann
+cd ~/code/flann
 mkdir build
 cd build
 
