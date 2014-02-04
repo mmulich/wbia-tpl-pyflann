@@ -7,6 +7,7 @@ cd ~/code/flann/build
 # Grab correct python executable
 export PYTHON_EXECUTABLE=$(which python)
 
+# Configure make build install
 cmake -G "Unix Makefiles" \
     -DBUILD_MATLAB_BINDINGS=Off \
     -DCMAKE_BUILD_TYPE=Release \
