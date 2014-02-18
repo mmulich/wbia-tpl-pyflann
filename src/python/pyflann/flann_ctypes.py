@@ -178,12 +178,14 @@ def find_lib_fpath(libname, root_dir, recurse_down=True):
                 #print('testing: %r' % lib_fpath)
                 tried_list.append(lib_fpath)
                 if exists(lib_fpath):
-                    print('using: %r' % lib_fpath)
+                    if not '--quiet' in sys.argv:
+                        print('using: %r' % lib_fpath)
                     return lib_fpath
         _new_root = dirname(root_dir)
         count += 1
         if count > 5:
-            print('not checking after 5 directories')
+            if not '--quiet' in sys.argv:
+                print('not checking after 5 directories')
             root_dir = None
             break
         if _new_root == root_dir:
@@ -212,7 +214,8 @@ def load_flann_library():
     try:
         root_dir = realpath(dirname(__file__))
     except NameError as ex:
-        print(ex)
+        if not '--quiet' in sys.argv:
+            print(ex)
         raise
     # root_dir = realpath(dirname(os.getcwd()))
     flannlib = load_library2('flann', root_dir)
