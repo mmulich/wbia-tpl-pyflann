@@ -269,7 +269,7 @@ def load_flann_library():
     print('FLANN is not in any known absolute paths. Tried: ')
     for tried_path, tried_ex in zip(tried_to_load, ttl_ex_list):
         print('PATH: ' + tried_path)
-        print('Exception: ' + repr(tried_ex))
+        print('Exception: ' + str(tried_ex))
         print('------')
 
     print('Trying relative paths as last resort')
