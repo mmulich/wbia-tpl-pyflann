@@ -35,6 +35,7 @@ import sys
 
 STRING = c_char_p
 
+__DEBUG_CLIB__ = '--debug' in sys.argv or '--debug-clib' in sys.argv
 
 class CustomStructure(Structure):
     """
@@ -178,7 +179,7 @@ def find_lib_fpath(libname, root_dir, recurse_down=True):
                 #print('testing: %r' % lib_fpath)
                 tried_list.append(lib_fpath)
                 if exists(lib_fpath):
-                    if not '--quiet' in sys.argv:
+                    if __DEBUG_CLIB__:
                         print('using: %r' % lib_fpath)
                     return lib_fpath
         _new_root = dirname(root_dir)
