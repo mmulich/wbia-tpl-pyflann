@@ -24,14 +24,21 @@
 #(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from flann_ctypes import *
-from exceptions import *
+#from flann_ctypes import *  # NOQA
+
+import sys
+from numpy import float32, float64, int32, empty, mean
+#from flann_ctypes import flannlib, FLANNParameters, allowed_types, ensure_2d_array, default_flags, FLANN_INTERFACE
+from flann_ctypes import *  # NOQA
+from ctypes import pointer, byref, c_float, c_char_p
+from exceptions import FLANNException
 import numpy.random as _rn
 
 
 index_type = int32
 
-def set_distance_type(distance_type, order = 0):
+
+def set_distance_type(distance_type, order=0):
     """
     Sets the distance type used. Possible values: euclidean, manhattan, minkowski, max_dist,
     hik, hellinger, cs, kl.
@@ -52,17 +59,17 @@ def set_distance_type(distance_type, order = 0):
                             "hamming_popcnt"   	: 11,
                             "l2_simple"   		: 12,
                             }
-    if type(distance_type)==str:
+    if isinstance(distance_type, str):
         distance_type = distance_translation[distance_type]
 
-    flannlib.flann_set_distance_type(distance_type,order)
-
+    flannlib.flann_set_distance_type(distance_type, order)
 
 
 def to_bytes(string):
     if sys.hexversion > 0x03000000:
-        return bytes(string,'utf-8')
+        return bytes(string, 'utf-8')
     return string
+
 
 # This class is derived from an initial implementation by Hoyt Koepke (hoytak@cs.ubc.ca)
 class FLANN:
@@ -92,27 +99,26 @@ class FLANN:
     def __del__(self):
         self.delete_index()
 
-
     ################################################################################
     # actual workhorse functions
 
-    def nn(self, pts, qpts, num_neighbors = 1, **kwargs):
+    def nn(self, pts, qpts, num_neighbors=1, **kwargs):
         """
         Returns the num_neighbors nearest points in dataset for each point
         in testset.
         """
 
-        if not pts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
 
-        if not qpts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
+        if qpts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
 
         if pts.dtype != qpts.dtype:
             raise FLANNException("Data and query must have the same type")
 
-        pts = ensure_2d_array(pts,default_flags)
-        qpts = ensure_2d_array(qpts,default_flags)
+        pts = ensure_2d_array(pts, default_flags)
+        qpts = ensure_2d_array(qpts, default_flags)
 
         npts, dim = pts.shape
         nqpts = qpts.shape[0]
@@ -121,22 +127,21 @@ class FLANN:
         assert(npts >= num_neighbors)
 
         result = empty( (nqpts, num_neighbors), dtype=index_type)
-        if pts.dtype==float64:
+        if pts.dtype == float64:
             dists = empty( (nqpts, num_neighbors), dtype=float64)
         else:
             dists = empty( (nqpts, num_neighbors), dtype=float32)
 
         self.__flann_parameters.update(kwargs)
 
-        flann.find_nearest_neighbors[pts.dtype.type](pts, npts, dim,
-                                                     qpts, nqpts, result, dists, num_neighbors,
-                                                     pointer(self.__flann_parameters))
+        FLANN_INTERFACE.find_nearest_neighbors[pts.dtype.type](pts, npts, dim,
+                                                               qpts, nqpts, result, dists, num_neighbors,
+                                                               pointer(self.__flann_parameters))
 
         if num_neighbors == 1:
             return (result.reshape( nqpts ), dists.reshape(nqpts))
         else:
-            return (result,dists)
-
+            return (result, dists)
 
     def build_index(self, pts, **kwargs):
         """
@@ -151,22 +156,22 @@ class FLANN:
         to float32.
         """
 
-        if not pts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
 
-        pts = ensure_2d_array(pts,default_flags)
+        pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
 
         self.__ensureRandomSeed(kwargs)
 
         self.__flann_parameters.update(kwargs)
 
-        if self.__curindex != None:
-            flann.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
+        if self.__curindex is not None:
+            FLANN_INTERFACE.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
             self.__curindex = None
 
         speedup = c_float(0)
-        self.__curindex = flann.build_index[pts.dtype.type](pts, npts, dim, byref(speedup), pointer(self.__flann_parameters))
+        self.__curindex = FLANN_INTERFACE.build_index[pts.dtype.type](pts, npts, dim, byref(speedup), pointer(self.__flann_parameters))
         self.__curindex_data = pts
         self.__curindex_type = pts.dtype.type
 
@@ -176,57 +181,57 @@ class FLANN:
         return params
 
     def add_points(self, pts, rebuild_threshold=2):
-        if not pts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
-        pts = ensure_2d_array(pts,default_flags)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+        pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
-        flann.add_points[self.__curindex_type](self.__curindex, pts, npts, dim, rebuild_threshold)
+        FLANN_INTERFACE.add_points[self.__curindex_type](self.__curindex, pts, npts, dim, rebuild_threshold)
 
     def save_index(self, filename):
         """
         This saves the index to a disk file.
         """
-        if self.__curindex != None:
-            flann.save_index[self.__curindex_type](self.__curindex, c_char_p(to_bytes(filename)))
+        if self.__curindex is not None:
+            FLANN_INTERFACE.save_index[self.__curindex_type](self.__curindex, c_char_p(to_bytes(filename)))
 
     def load_index(self, filename, pts):
         """
         Loads an index previously saved to disk.
         """
 
-        if not pts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
 
-        pts = ensure_2d_array(pts,default_flags)
+        pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
 
-        if self.__curindex != None:
-            flann.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
+        if self.__curindex is not None:
+            FLANN_INTERFACE.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
             self.__curindex = None
             self.__curindex_data = None
             self.__curindex_type = None
 
-        self.__curindex = flann.load_index[pts.dtype.type](c_char_p(to_bytes(filename)), pts, npts, dim)
+        self.__curindex = FLANN_INTERFACE.load_index[pts.dtype.type](c_char_p(to_bytes(filename)), pts, npts, dim)
         self.__curindex_data = pts
         self.__curindex_type = pts.dtype.type
 
-    def nn_index(self, qpts, num_neighbors = 1, **kwargs):
+    def nn_index(self, qpts, num_neighbors=1, **kwargs):
         """
         For each point in querypts, (which may be a single point), it
         returns the num_neighbors nearest points in the index built by
         calling build_index.
         """
 
-        if self.__curindex == None:
+        if self.__curindex is None:
             raise FLANNException("build_index(...) method not called first or current index deleted.")
 
-        if not qpts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%qpts.dtype)
+        if qpts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % qpts.dtype)
 
         if self.__curindex_type != qpts.dtype.type:
             raise FLANNException("Index and query must have the same type")
 
-        qpts = ensure_2d_array(qpts,default_flags)
+        qpts = ensure_2d_array(qpts, default_flags)
 
         npts, dim = self.__curindex_data.shape
 
@@ -239,52 +244,50 @@ class FLANN:
         assert(npts >= num_neighbors)
 
         result = empty( (nqpts, num_neighbors), dtype=index_type)
-        if self.__curindex_type==float64:
+        if self.__curindex_type == float64:
             dists = empty( (nqpts, num_neighbors), dtype=float64)
         else:
             dists = empty( (nqpts, num_neighbors), dtype=float32)
 
         self.__flann_parameters.update(kwargs)
 
-        flann.find_nearest_neighbors_index[self.__curindex_type](self.__curindex,
-                    qpts, nqpts,
-                    result, dists, num_neighbors,
-                    pointer(self.__flann_parameters))
+        FLANN_INTERFACE.find_nearest_neighbors_index[self.__curindex_type](self.__curindex,
+                                                                           qpts, nqpts,
+                                                                           result, dists, num_neighbors,
+                                                                           pointer(self.__flann_parameters))
 
         if num_neighbors == 1:
             return (result.reshape( nqpts ), dists.reshape( nqpts ))
         else:
-            return (result,dists)
-
+            return (result, dists)
 
     def nn_radius(self, query, radius, **kwargs):
 
-        if self.__curindex == None:
+        if self.__curindex is None:
             raise FLANNException("build_index(...) method not called first or current index deleted.")
 
-        if not query.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%query.dtype)
+        if query.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % query.dtype)
 
         if self.__curindex_type != query.dtype.type:
             raise FLANNException("Index and query must have the same type")
 
         npts, dim = self.__curindex_data.shape
-        assert(query.shape[0]==dim)
+        assert(query.shape[0] == dim)
 
         result = empty( npts, dtype=index_type)
-        if self.__curindex_type==float64:
+        if self.__curindex_type == float64:
             dists = empty( npts, dtype=float64)
         else:
             dists = empty( npts, dtype=float32)
 
         self.__flann_parameters.update(kwargs)
 
-        nn = flann.radius_search[self.__curindex_type](self.__curindex, query,
-                                         result, dists, npts,
-                                         radius, pointer(self.__flann_parameters))
+        nn = FLANN_INTERFACE.radius_search[self.__curindex_type](self.__curindex, query,
+                                                                 result, dists, npts,
+                                                                 radius, pointer(self.__flann_parameters))
 
-
-        return (result[0:nn],dists[0:nn])
+        return (result[0:nn], dists[0:nn])
 
     def delete_index(self, **kwargs):
         """
@@ -294,16 +297,19 @@ class FLANN:
 
         self.__flann_parameters.update(kwargs)
 
-        if self.__curindex != None:
-            flann.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
+        if self.__curindex is not None:
+            if FLANN_INTERFACE is None:
+                print('WARNING: FLANN_INTERFACE is None (inproperly deleted)')
+            else:
+                FLANN_INTERFACE.free_index[self.__curindex_type](self.__curindex, pointer(self.__flann_parameters))
             self.__curindex = None
             self.__curindex_data = None
 
     ##########################################################################################
     # Clustering functions
 
-    def kmeans(self, pts, num_clusters, max_iterations = None,
-               dtype = None, **kwargs):
+    def kmeans(self, pts, num_clusters, max_iterations=None,
+               dtype=None, **kwargs):
         """
         Runs kmeans on pts with num_clusters centroids.  Returns a
         numpy array of size num_clusters x dim.
@@ -321,7 +327,7 @@ class FLANN:
             raise FLANNException('num_clusters must be an integer >= 1')
 
         if num_clusters == 1:
-            if dtype == None or dtype == pts.dtype:
+            if dtype is None or dtype == pts.dtype:
                 return mean(pts, 0).reshape(1, pts.shape[1])
             else:
                 return dtype(mean(pts, 0).reshape(1, pts.shape[1]))
@@ -331,8 +337,8 @@ class FLANN:
                                         dtype, **kwargs)
 
     def hierarchical_kmeans(self, pts, branch_size, num_branches,
-                            max_iterations = None,
-                            dtype = None, **kwargs):
+                            max_iterations=None,
+                            dtype=None, **kwargs):
         """
         Clusters the data by using multiple runs of kmeans to
         recursively partition the dataset.  The number of resulting
@@ -349,8 +355,8 @@ class FLANN:
 
         # First verify the paremeters are sensible.
 
-        if not pts.dtype.type in allowed_types:
-            raise FLANNException("Cannot handle type: %s"%pts.dtype)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
 
         if int(branch_size) != branch_size or branch_size < 2:
             raise FLANNException('branch_size must be an integer >= 2.')
@@ -362,16 +368,15 @@ class FLANN:
 
         num_branches = int(num_branches)
 
-        if max_iterations == None:
+        if max_iterations is None:
             max_iterations = -1
         else:
             max_iterations = int(max_iterations)
 
-
         # init the arrays and starting values
-        pts = ensure_2d_array(pts,default_flags)
+        pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
-        num_clusters = (branch_size-1)*num_branches+1;
+        num_clusters = (branch_size - 1) * num_branches + 1
 
         if pts.dtype.type == float64:
             result = empty( (num_clusters, dim), dtype=float64)
@@ -389,13 +394,13 @@ class FLANN:
 
         self.__flann_parameters.update(params)
 
-        numclusters = flann.compute_cluster_centers[pts.dtype.type](pts, npts, dim,
-                                        num_clusters, result,
-                                        pointer(self.__flann_parameters))
+        numclusters = FLANN_INTERFACE.compute_cluster_centers[pts.dtype.type](pts, npts, dim,
+                                                                              num_clusters, result,
+                                                                              pointer(self.__flann_parameters))
         if numclusters <= 0:
             raise FLANNException('Error occured during clustering procedure.')
 
-        if dtype == None:
+        if dtype is None:
             return result
         else:
             return dtype(result)
@@ -403,7 +408,6 @@ class FLANN:
     ##########################################################################################
     # internal bookkeeping functions
 
-
     def __ensureRandomSeed(self, kwargs):
-        if not 'random_seed' in kwargs:
-            kwargs['random_seed'] = self.__rn_gen.randint(2**30)
+        if 'random_seed' not in kwargs:
+            kwargs['random_seed'] = self.__rn_gen.randint(2 ** 30)

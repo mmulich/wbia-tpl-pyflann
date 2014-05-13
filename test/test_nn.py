@@ -8,6 +8,7 @@ from numpy import *
 from numpy.random import *
 import unittest
 
+
 class Test_PyFLANN_nn(unittest.TestCase):
 
     def setUp(self):
@@ -15,7 +16,7 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
     ################################################################################
     # The typical
-    
+
     def test_nn_2d_10pt_kmeans(self):
         self.__nd_random_test(2, 2, algorithm='kdtree')
 
@@ -43,7 +44,6 @@ class Test_PyFLANN_nn(unittest.TestCase):
     def test_nn_100d_50pt_linear(self):
         self.__nd_random_test(100, 50, algorithm='linear')
 
-
     def test_nn_2d_1000pt_composite(self):
         self.__nd_random_test(2, 1000, algorithm='composite')
 
@@ -53,7 +53,6 @@ class Test_PyFLANN_nn(unittest.TestCase):
     def test_nn_500d_100pt_composite(self):
         self.__nd_random_test(500, 100, algorithm='composite')
 
-
     def test_nn_multtrees_2d_1000pt_kmeans(self):
         self.__nd_random_test(2, 1000, algorithm='kmeans', trees=8)
 
@@ -62,8 +61,6 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
     def test_nn_multtrees_500d_100pt_kmeans(self):
         self.__nd_random_test(500, 100, algorithm='kmeans', trees=8)
-
-
 
     ##########################################################################################
     # Stress it should handle
@@ -88,7 +85,7 @@ class Test_PyFLANN_nn(unittest.TestCase):
         seed(0)
         x = array(rand(N, dim), dtype=type)
         perm = permutation(N)
-        
+
         idx,dists = self.nn.nn(x, x[perm], **kwargs)
         self.assertTrue(all(idx == perm))
 
@@ -105,14 +102,14 @@ class Test_PyFLANN_nn(unittest.TestCase):
                      'failed #1: N=%d,correctness=%f' % (N, correctness/N))
 
         # now what happens if they are slightly off
-        x_mult_nn += randn(x_mult_nn.shape[0], x_mult_nn.shape[1])*0.0001/dim
-        n2idx,n2dists = self.nn.nn(x_mult_nn, x, num_neighbors = num_neighbors, **kwargs)
+        x_mult_nn += randn(x_mult_nn.shape[0], x_mult_nn.shape[1]) * 0.0001 / dim
+        n2idx, n2dists = self.nn.nn(x_mult_nn, x, num_neighbors = num_neighbors, **kwargs)
 
         for i in range(N):
-            correctness += float(len(set(n2idx[i]).intersection([i + n*N for n in range(num_neighbors)])))/num_neighbors
+            correctness += float(len(set(n2idx[i]).intersection([i + n * N for n in range(num_neighbors)])))/num_neighbors
 
         self.assertTrue(correctness / N >= 0.99,
-                     'failed #2: N=%d,correctness=%f' % (N, correctness/N))
-        
+                     'failed #2: N=%d,correctness=%f' % (N, correctness / N))
+
 if __name__ == '__main__':
     unittest.main()

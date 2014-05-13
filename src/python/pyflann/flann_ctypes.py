@@ -24,18 +24,19 @@
 #(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ctypes import *  # TODO: * imports are bad and should be removed
+#from ctypes import *  # TODO: * imports are bad and should be removed
 import ctypes as C
+from ctypes import c_char_p, c_int, c_float, c_uint, c_long, c_void_p, Structure, POINTER
 #from ctypes.util import find_library
-from numpy import float32, float64, uint8, int32, matrix, array, empty, reshape, require
-from numpy.ctypeslib import load_library, ndpointer
-import os
+from numpy import float32, float64, uint8, int32, require
+from numpy.ctypeslib import ndpointer
 from os.path import join, exists, realpath, dirname, normpath
 import sys
 
 STRING = c_char_p
 
 __DEBUG_CLIB__ = '--debug' in sys.argv or '--debug-clib' in sys.argv
+
 
 class CustomStructure(Structure):
     """
@@ -185,7 +186,7 @@ def find_lib_fpath(libname, root_dir, recurse_down=True):
         _new_root = dirname(root_dir)
         count += 1
         if count > 5:
-            if not '--quiet' in sys.argv:
+            if '--quiet' not in sys.argv:
                 print('not checking after 5 directories')
             root_dir = None
             break
@@ -215,113 +216,47 @@ def load_flann_library():
     try:
         root_dir = realpath(dirname(__file__))
     except NameError as ex:
-        if not '--quiet' in sys.argv:
+        if '--quiet' not in sys.argv:
             print(ex)
         raise
     # root_dir = realpath(dirname(os.getcwd()))
     flannlib = load_library2('flann', root_dir)
     return flannlib
 
-    '''
-    root_dir = os.path.abspath(os.path.dirname(__file__))
-
-    libnames = ['libflann.so']
-    if sys.platform == 'win32':
-        libnames = ['libflann.dll', 'flann.dll']
-    elif sys.platform == 'darwin':
-        libnames = ['libflann.dylib']
-
-    tried_to_load = []
-    ttl_ex_list = []
-
-    def try_load_flann(libpath):
-        try:
-            try_path = os.path.normpath(libpath)
-            tried_to_load.append(try_path)
-            flannlib = cdll[try_path]
-            #print(' ... Found FLANN Library: '+str(try_path))
-            return flannlib
-        except Exception as ex:
-            ttl_ex_list.append(ex)
-
-    while root_dir is not None:
-        for libname in libnames:
-            # Try 1
-            flannlib = try_load_flann(os.path.join(root_dir, 'lib', libname))
-            if not flannlib is None:
-                return flannlib
-            # Try 2
-            flannlib = try_load_flann(os.path.join(root_dir, libname))
-            if not flannlib is None:
-                return flannlib
-            # Try 3
-            flannlib = try_load_flann(os.path.join(root_dir, 'build', 'lib', libname))
-            if not flannlib is None:
-                return flannlib
-
-        # Go down directories to find libflann
-        _new_root = os.path.dirname(root_dir)
-        if _new_root == root_dir:
-            root_dir = None
-            break
-        else:
-            root_dir = _new_root
-
-    print('FLANN is not in any known absolute paths. Tried: ')
-    for tried_path, tried_ex in zip(tried_to_load, ttl_ex_list):
-        print('PATH: ' + tried_path)
-        print('Exception: ' + str(tried_ex))
-        print('------')
-
-    print('Trying relative paths as last resort')
-    for libname in libnames:
-        flannlib = try_load_flann(os.path.join(libname))
-        if not flannlib is None:
-            return flannlib
-        flannlib = try_load_flann(os.path.join('lib', libname))
-        if not flannlib is None:
-            return flannlib
-        flannlib = try_load_flann(os.path.join('build', 'lib', libname))
-        if not flannlib is None:
-            return flannlib
-
-    print('Failed to load FLANN')
-    return None
-    '''
 
 flannlib = load_flann_library()
 if flannlib is None:
     raise ImportError('Cannot load dynamic library. Did you compile FLANN?')
 
 
-class FlannLib:
+class FlannLibInterface:
     pass
-flann = FlannLib()
+FLANN_INTERFACE = FlannLibInterface()
 
 
 flannlib.flann_log_verbosity.restype = None
 flannlib.flann_log_verbosity.argtypes = [
-        c_int # level
+    c_int  # level
 ]
-
 
 
 flannlib.flann_set_distance_type.restype = None
 flannlib.flann_set_distance_type.argtypes = [
-        c_int,
-        c_int,
+    c_int,
+    c_int,
 ]
 
-type_mappings = ( ('float','float32'),
-                  ('double','float64'),
-                  ('byte','uint8'),
-                  ('int','int32') )
+type_mappings = ( ('float',  'float32'),
+                  ('double', 'float64'),
+                  ('byte',   'uint8'),
+                  ('int',    'int32') )
+
 
 def define_functions(str):
     for type in type_mappings:
-        eval(compile(str%{'C':type[0],'numpy':type[1]},"<string>","exec"))
+        eval(compile(str % {'C': type[0], 'numpy': type[1]}, "<string>", "exec"))
 
-flann.build_index = {}
+FLANN_INTERFACE.build_index = {}
 define_functions(r"""
 flannlib.flann_build_index_%(C)s.restype = FLANN_INDEX
 flannlib.flann_build_index_%(C)s.argtypes = [
@@ -331,10 +266,10 @@ flannlib.flann_build_index_%(C)s.argtypes = [
         POINTER(c_float), # speedup
         POINTER(FLANNParameters)  # flann_params
 ]
-flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
+FLANN_INTERFACE.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
 """)
 
-flann.add_points = {}
+FLANN_INTERFACE.add_points = {}
 define_functions(r"""
 flannlib.flann_add_points_%(C)s.restype = None
 flannlib.flann_add_points_%(C)s.argtypes = [
@@ -344,22 +279,21 @@ flannlib.flann_add_points_%(C)s.argtypes = [
         c_int, # cols
         c_int, # rebuild_threshhold
 ]
-flann.add_points[%(numpy)s] = flannlib.flann_add_points_%(C)s
+FLANN_INTERFACE.add_points[%(numpy)s] = flannlib.flann_add_points_%(C)s
 """)
 
 
-
-flann.save_index = {}
+FLANN_INTERFACE.save_index = {}
 define_functions(r"""
 flannlib.flann_save_index_%(C)s.restype = None
 flannlib.flann_save_index_%(C)s.argtypes = [
         FLANN_INDEX, # index_id
         c_char_p #filename
 ]
-flann.save_index[%(numpy)s] = flannlib.flann_save_index_%(C)s
+FLANN_INTERFACE.save_index[%(numpy)s] = flannlib.flann_save_index_%(C)s
 """)
 
-flann.load_index = {}
+FLANN_INTERFACE.load_index = {}
 define_functions(r"""
 flannlib.flann_load_index_%(C)s.restype = FLANN_INDEX
 flannlib.flann_load_index_%(C)s.argtypes = [
@@ -368,10 +302,10 @@ flannlib.flann_load_index_%(C)s.argtypes = [
         c_int, # rows
         c_int, # cols
 ]
-flann.load_index[%(numpy)s] = flannlib.flann_load_index_%(C)s
+FLANN_INTERFACE.load_index[%(numpy)s] = flannlib.flann_load_index_%(C)s
 """)
 
-flann.find_nearest_neighbors = {}
+FLANN_INTERFACE.find_nearest_neighbors = {}
 define_functions(r"""
 flannlib.flann_find_nearest_neighbors_%(C)s.restype = c_int
 flannlib.flann_find_nearest_neighbors_%(C)s.argtypes = [
@@ -385,27 +319,27 @@ flannlib.flann_find_nearest_neighbors_%(C)s.argtypes = [
         c_int, # nn
         POINTER(FLANNParameters)  # flann_params
 ]
-flann.find_nearest_neighbors[%(numpy)s] = flannlib.flann_find_nearest_neighbors_%(C)s
+FLANN_INTERFACE.find_nearest_neighbors[%(numpy)s] = flannlib.flann_find_nearest_neighbors_%(C)s
 """)
 
 # fix definition for the 'double' case
 
 flannlib.flann_find_nearest_neighbors_double.restype = c_int
 flannlib.flann_find_nearest_neighbors_double.argtypes = [
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # dataset
-        c_int, # rows
-        c_int, # cols
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # testset
-        c_int,  # tcount
-        ndpointer(int32, ndim = 2, flags='aligned, c_contiguous, writeable'), # result
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous, writeable'), # dists
-        c_int, # nn
-        POINTER(FLANNParameters)  # flann_params
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous'),  # dataset
+    c_int,  # rows
+    c_int,  # cols
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous'),  # testset
+    c_int,  # tcount
+    ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous, writeable'),  # dists
+    c_int,  # nn
+    POINTER(FLANNParameters)  # flann_params
 ]
-flann.find_nearest_neighbors[float64] = flannlib.flann_find_nearest_neighbors_double
+FLANN_INTERFACE.find_nearest_neighbors[float64] = flannlib.flann_find_nearest_neighbors_double
 
 
-flann.find_nearest_neighbors_index = {}
+FLANN_INTERFACE.find_nearest_neighbors_index = {}
 define_functions(r"""
 flannlib.flann_find_nearest_neighbors_index_%(C)s.restype = c_int
 flannlib.flann_find_nearest_neighbors_index_%(C)s.argtypes = [
@@ -417,22 +351,22 @@ flannlib.flann_find_nearest_neighbors_index_%(C)s.argtypes = [
         c_int, # nn
         POINTER(FLANNParameters) # flann_params
 ]
-flann.find_nearest_neighbors_index[%(numpy)s] = flannlib.flann_find_nearest_neighbors_index_%(C)s
+FLANN_INTERFACE.find_nearest_neighbors_index[%(numpy)s] = flannlib.flann_find_nearest_neighbors_index_%(C)s
 """)
 
 flannlib.flann_find_nearest_neighbors_index_double.restype = c_int
 flannlib.flann_find_nearest_neighbors_index_double.argtypes = [
-        FLANN_INDEX, # index_id
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # testset
-        c_int,  # tcount
-        ndpointer(int32, ndim = 2, flags='aligned, c_contiguous, writeable'), # result
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous, writeable'), # dists
-        c_int, # nn
-        POINTER(FLANNParameters) # flann_params
+    FLANN_INDEX,  # index_id
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous'),  # testset
+    c_int,  # tcount
+    ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous, writeable'),  # dists
+    c_int,  # nn
+    POINTER(FLANNParameters)  # flann_params
 ]
-flann.find_nearest_neighbors_index[float64] = flannlib.flann_find_nearest_neighbors_index_double
+FLANN_INTERFACE.find_nearest_neighbors_index[float64] = flannlib.flann_find_nearest_neighbors_index_double
 
-flann.radius_search = {}
+FLANN_INTERFACE.radius_search = {}
 define_functions(r"""
 flannlib.flann_radius_search_%(C)s.restype = c_int
 flannlib.flann_radius_search_%(C)s.argtypes = [
@@ -444,23 +378,23 @@ flannlib.flann_radius_search_%(C)s.argtypes = [
         c_float, # radius
         POINTER(FLANNParameters) # flann_params
 ]
-flann.radius_search[%(numpy)s] = flannlib.flann_radius_search_%(C)s
+FLANN_INTERFACE.radius_search[%(numpy)s] = flannlib.flann_radius_search_%(C)s
 """)
 
 flannlib.flann_radius_search_double.restype = c_int
 flannlib.flann_radius_search_double.argtypes = [
-        FLANN_INDEX, # index_id
-        ndpointer(float64, ndim = 1, flags='aligned, c_contiguous'), # query
-        ndpointer(int32, ndim = 1, flags='aligned, c_contiguous, writeable'), # indices
-        ndpointer(float64, ndim = 1, flags='aligned, c_contiguous, writeable'), # dists
-        c_int, # max_nn
-        c_float, # radius
-        POINTER(FLANNParameters) # flann_params
+    FLANN_INDEX,  # index_id
+    ndpointer(float64, ndim=1, flags='aligned, c_contiguous'),  # query
+    ndpointer(int32, ndim=1, flags='aligned, c_contiguous, writeable'),  # indices
+    ndpointer(float64, ndim=1, flags='aligned, c_contiguous, writeable'),  # dists
+    c_int,    # max_nn
+    c_float,  # radius
+    POINTER(FLANNParameters)  # flann_params
 ]
-flann.radius_search[float64] = flannlib.flann_radius_search_double
+FLANN_INTERFACE.radius_search[float64] = flannlib.flann_radius_search_double
 
 
-flann.compute_cluster_centers = {}
+FLANN_INTERFACE.compute_cluster_centers = {}
 define_functions(r"""
 flannlib.flann_compute_cluster_centers_%(C)s.restype = c_int
 flannlib.flann_compute_cluster_centers_%(C)s.argtypes = [
@@ -471,34 +405,34 @@ flannlib.flann_compute_cluster_centers_%(C)s.argtypes = [
         ndpointer(float32, flags='aligned, c_contiguous, writeable'), # result
         POINTER(FLANNParameters)  # flann_params
 ]
-flann.compute_cluster_centers[%(numpy)s] = flannlib.flann_compute_cluster_centers_%(C)s
+FLANN_INTERFACE.compute_cluster_centers[%(numpy)s] = flannlib.flann_compute_cluster_centers_%(C)s
 """)
 # double is an exception
 flannlib.flann_compute_cluster_centers_double.restype = c_int
 flannlib.flann_compute_cluster_centers_double.argtypes = [
-        ndpointer(float64, ndim = 2, flags='aligned, c_contiguous'), # dataset
-        c_int,  # rows
-        c_int,  # cols
-        c_int,  # clusters
-        ndpointer(float64, flags='aligned, c_contiguous, writeable'), # result
-        POINTER(FLANNParameters)  # flann_params
+    ndpointer(float64, ndim=2, flags='aligned, c_contiguous'),  # dataset
+    c_int,  # rows
+    c_int,  # cols
+    c_int,  # clusters
+    ndpointer(float64, flags='aligned, c_contiguous, writeable'),  # result
+    POINTER(FLANNParameters)  # flann_params
 ]
-flann.compute_cluster_centers[float64] = flannlib.flann_compute_cluster_centers_double
+FLANN_INTERFACE.compute_cluster_centers[float64] = flannlib.flann_compute_cluster_centers_double
 
 
-flann.free_index = {}
+FLANN_INTERFACE.free_index = {}
 define_functions(r"""
 flannlib.flann_free_index_%(C)s.restype = None
 flannlib.flann_free_index_%(C)s.argtypes = [
         FLANN_INDEX,  # index_id
         POINTER(FLANNParameters) # flann_params
 ]
-flann.free_index[%(numpy)s] = flannlib.flann_free_index_%(C)s
+FLANN_INTERFACE.free_index[%(numpy)s] = flannlib.flann_free_index_%(C)s
 """)
 
 
-def ensure_2d_array(array, flags, **kwargs):
-    array = require(array, requirements = flags, **kwargs)
-    if len(array.shape) == 1:
-        array = array.reshape(-1,array.size)
-    return array
+def ensure_2d_array(arr, flags, **kwargs):
+    arr = require(arr, requirements=flags, **kwargs)
+    if len(arr.shape) == 1:
+        arr = arr.reshape(-1, arr.size)
+    return arr
