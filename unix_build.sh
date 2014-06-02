@@ -1,6 +1,9 @@
-cd ~/code/flann
+#!/bin/bash
+
+REPODIR=$(cd $(dirname $0) ; pwd)
+cd $REPODIR/flann
 mkdir build
-cd ~/code/flann/build
+cd build
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
