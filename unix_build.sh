@@ -8,7 +8,7 @@ cd build
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
 # Grab correct python executable
-export PYTHON_EXECUTABLE=$(which python)
+export PYTHON_EXECUTABLE=$(which python2.7)
 
 # Configure make build install
 cmake -G "Unix Makefiles" \
