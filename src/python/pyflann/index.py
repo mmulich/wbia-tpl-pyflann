@@ -27,15 +27,26 @@
 #from flann_ctypes import *  # NOQA
 
 import sys
-from numpy import float32, float64, int32, empty, mean
-#from flann_ctypes import flannlib, FLANNParameters, allowed_types, ensure_2d_array, default_flags, FLANN_INTERFACE
-from flann_ctypes import *  # NOQA
+from numpy import float32, float64, int32, empty, mean, require
+from flann_ctypes import flannlib, FLANNParameters, allowed_types, default_flags, FLANN_INTERFACE
+#from flann_ctypes import *  # NOQA
 from ctypes import pointer, byref, c_float, c_char_p
 from exceptions import FLANNException
 import numpy.random as _rn
 
 
 index_type = int32
+
+
+def ensure_2d_array(arr, flags, **kwargs):
+    arr = require(arr, requirements=flags, **kwargs)
+    if len(arr.shape) == 1:
+        arr = arr.reshape(-1, arr.size)
+    return arr
+
+
+def set_log_verbosity(level):
+    flannlib.flann_log_verbosity(level)
 
 
 def set_distance_type(distance_type, order=0):
@@ -102,47 +113,6 @@ class FLANN:
     ################################################################################
     # actual workhorse functions
 
-    def nn(self, pts, qpts, num_neighbors=1, **kwargs):
-        """
-        Returns the num_neighbors nearest points in dataset for each point
-        in testset.
-        """
-
-        if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
-
-        if qpts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
-
-        if pts.dtype != qpts.dtype:
-            raise FLANNException("Data and query must have the same type")
-
-        pts = ensure_2d_array(pts, default_flags)
-        qpts = ensure_2d_array(qpts, default_flags)
-
-        npts, dim = pts.shape
-        nqpts = qpts.shape[0]
-
-        assert(qpts.shape[1] == dim)
-        assert(npts >= num_neighbors)
-
-        result = empty( (nqpts, num_neighbors), dtype=index_type)
-        if pts.dtype == float64:
-            dists = empty( (nqpts, num_neighbors), dtype=float64)
-        else:
-            dists = empty( (nqpts, num_neighbors), dtype=float32)
-
-        self.__flann_parameters.update(kwargs)
-
-        FLANN_INTERFACE.find_nearest_neighbors[pts.dtype.type](pts, npts, dim,
-                                                               qpts, nqpts, result, dists, num_neighbors,
-                                                               pointer(self.__flann_parameters))
-
-        if num_neighbors == 1:
-            return (result.reshape( nqpts ), dists.reshape(nqpts))
-        else:
-            return (result, dists)
-
     def build_index(self, pts, **kwargs):
         """
         This builds and internally stores an index to be used for
@@ -181,6 +151,10 @@ class FLANN:
         return params
 
     def add_points(self, pts, rebuild_threshold=2):
+        """
+        Incrementally add points to the index.
+        """
+
         if pts.dtype.type not in allowed_types:
             raise FLANNException("Cannot handle type: %s" % pts.dtype)
         pts = ensure_2d_array(pts, default_flags)
@@ -215,6 +189,48 @@ class FLANN:
         self.__curindex_data = pts
         self.__curindex_type = pts.dtype.type
 
+    def nn(self, pts, qpts, num_neighbors=1, **kwargs):
+        """
+        Builds a new index on the fly and performs nn_index on it.
+
+        returns (result, dists)
+        """
+
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+
+        if qpts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+
+        if pts.dtype != qpts.dtype:
+            raise FLANNException("Data and query must have the same type")
+
+        pts = ensure_2d_array(pts, default_flags)
+        qpts = ensure_2d_array(qpts, default_flags)
+
+        npts, dim = pts.shape
+        nqpts = qpts.shape[0]
+
+        assert(qpts.shape[1] == dim), 'dim=%r, qpts.shape=%r' % (dim, qpts.shape)
+        assert(npts >= num_neighbors)
+
+        result = empty( (nqpts, num_neighbors), dtype=index_type)
+        if pts.dtype == float64:
+            dists = empty( (nqpts, num_neighbors), dtype=float64)
+        else:
+            dists = empty( (nqpts, num_neighbors), dtype=float32)
+
+        self.__flann_parameters.update(kwargs)
+
+        FLANN_INTERFACE.find_nearest_neighbors[pts.dtype.type](pts, npts, dim,
+                                                               qpts, nqpts, result, dists, num_neighbors,
+                                                               pointer(self.__flann_parameters))
+
+        if num_neighbors == 1:
+            return (result.reshape( nqpts ), dists.reshape(nqpts))
+        else:
+            return (result, dists)
+
     def nn_index(self, qpts, num_neighbors=1, **kwargs):
         """
         For each point in querypts, (which may be a single point), it
@@ -240,7 +256,7 @@ class FLANN:
 
         nqpts = qpts.shape[0]
 
-        assert(qpts.shape[1] == dim)
+        assert(qpts.shape[1] == dim), 'dim=%r, qpts.shape=%r' % (dim, qpts.shape)
         assert(npts >= num_neighbors)
 
         result = empty( (nqpts, num_neighbors), dtype=index_type)
@@ -255,25 +271,38 @@ class FLANN:
                                                                            qpts, nqpts,
                                                                            result, dists, num_neighbors,
                                                                            pointer(self.__flann_parameters))
-
         if num_neighbors == 1:
             return (result.reshape( nqpts ), dists.reshape( nqpts ))
         else:
             return (result, dists)
 
-    def nn_radius(self, query, radius, **kwargs):
+    def nn_radius(self, qpts, radius, **kwargs):
+        """
+        * Performs an radius search using an already constructed index.
+        *
+        * In case of radius search, instead of always returning a predetermined
+        * number of nearest neighbours (for example the 10 nearest neighbours), the
+        * search will return all the neighbours found within a search radius
+        * of the query point.
+        *
+        * The check parameter in the FLANNParameters below sets the level of approximation
+        * for the search by only visiting "checks" number of features in the index
+        * (the same way as for the KNN search). A lower value for checks will give
+        * a higher search speedup at the cost of potentially not returning all the
+        * neighbours in the specified radius.
+        """
 
         if self.__curindex is None:
             raise FLANNException("build_index(...) method not called first or current index deleted.")
 
-        if query.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % query.dtype)
+        if qpts.dtype.type not in allowed_types:
+            raise FLANNException("Cannot handle type: %s" % qpts.dtype)
 
-        if self.__curindex_type != query.dtype.type:
+        if self.__curindex_type != qpts.dtype.type:
             raise FLANNException("Index and query must have the same type")
 
         npts, dim = self.__curindex_data.shape
-        assert(query.shape[0] == dim)
+        assert(qpts.shape[0] == dim), 'dim=%r, qpts.shape=%r' % (dim, qpts.shape)
 
         result = empty( npts, dtype=index_type)
         if self.__curindex_type == float64:
@@ -283,7 +312,7 @@ class FLANN:
 
         self.__flann_parameters.update(kwargs)
 
-        nn = FLANN_INTERFACE.radius_search[self.__curindex_type](self.__curindex, query,
+        nn = FLANN_INTERFACE.radius_search[self.__curindex_type](self.__curindex, qpts,
                                                                  result, dists, npts,
                                                                  radius, pointer(self.__flann_parameters))
 

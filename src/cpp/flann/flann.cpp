@@ -353,6 +353,7 @@ void flann_add_points_int(flann_index_t index_ptr, int* dataset, int rows, int c
 // Add Points END
 
 
+
 template<typename Distance>
 int __flann_save_index(flann_index_t index_ptr, char* filename)
 {

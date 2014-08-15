@@ -28,7 +28,7 @@
 import ctypes as C
 from ctypes import c_char_p, c_int, c_float, c_uint, c_long, c_void_p, Structure, POINTER
 #from ctypes.util import find_library
-from numpy import float32, float64, uint8, int32, require
+from numpy import float32, float64, uint8, int32
 from numpy.ctypeslib import ndpointer
 from os.path import join, exists, realpath, dirname, normpath
 import sys
@@ -239,7 +239,6 @@ flannlib.flann_log_verbosity.argtypes = [
     c_int  # level
 ]
 
-
 flannlib.flann_set_distance_type.restype = None
 flannlib.flann_set_distance_type.argtypes = [
     c_int,
@@ -429,10 +428,3 @@ flannlib.flann_free_index_%(C)s.argtypes = [
 ]
 FLANN_INTERFACE.free_index[%(numpy)s] = flannlib.flann_free_index_%(C)s
 """)
-
-
-def ensure_2d_array(arr, flags, **kwargs):
-    arr = require(arr, requirements=flags, **kwargs)
-    if len(arr.shape) == 1:
-        arr = arr.reshape(-1, arr.size)
-    return arr
