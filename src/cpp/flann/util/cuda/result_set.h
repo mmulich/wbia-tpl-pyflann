@@ -32,10 +32,13 @@
 #include <flann/util/cuda/heap.h>
 #include <limits>
 
-__device__ __forceinline__
+__device__ __host__ __forceinline__
 float infinity()
 {
-       return __int_as_float(0x7f800000);
+    // https://github.com/mariusmuja/flann/issues/133
+    //return __int_as_float(0x7f800000);
+    return 2139095040.f;
+    // This seems either way to be a better solution, because infinity is a constant
 }
 
 #ifndef INFINITY
