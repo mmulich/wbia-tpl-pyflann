@@ -350,6 +350,8 @@ class FLANN:
         If dtype is None (the default), the array returned is the same
         type as pts.  Otherwise, the returned array is of type dtype.
 
+
+        (this just calls flann.hierarchical_kmeans with num_branches=1)
         """
 
         if int(num_clusters) != num_clusters or num_clusters < 1:
