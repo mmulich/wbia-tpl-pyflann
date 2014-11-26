@@ -28,4 +28,7 @@
 #import os
 #sys.path.insert(0, os.path.split(__file__)[0]) # make python3 happy
 
-from index import *
+import utool as ut
+ut.noinject(__name__, '[pyflann.__init__]')
+
+from index import *  # NOQA
