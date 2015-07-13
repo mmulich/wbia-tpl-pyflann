@@ -90,6 +90,7 @@ class FLANN(object):
         self.__curindex = None
         self.__curindex_data = None  # pointer to keep the numpy data alive
         self.__added_data = []  # contained to keep any added numpy data alive
+        self.__removed_ids = []  # contains the point ids that have been removed
         self.__curindex_type = None
 
         self.__flann_parameters = FLANNParameters()
@@ -100,13 +101,19 @@ class FLANN(object):
         self.delete_index()
 
     def get_indexed_shape(self):
+        """ returns the shape of the data being indexed """
         npts, dim = self.__curindex_data.shape
         for _extra in self.__added_data:
             npts += _extra.shape[0]
+        npts -= len(self.__removed_ids)
         return npts, dim
 
     def get_indexed_data(self):
-        """ returns all the data indexed by the FLANN object """
+        """
+        returns all the data indexed by the FLANN object
+
+        (this returns points that have been removed but still exist in memory)
+        """
         return self.__curindex_data, self.__added_data
 
     def used_memory_dataset(self):
@@ -239,6 +246,7 @@ class FLANN(object):
         Returns: void
         """
         flann.remove_point[self.__curindex_type](self.__curindex, id_)
+        self.__removed_ids.append(id_)
 
     def remove_points(self, id_list):
         """
@@ -251,27 +259,6 @@ class FLANN(object):
         """
         for id_ in id_list:
             flann.remove_point[self.__curindex_type](self.__curindex, id_)
-
-    def set_dataset(self, pts):
-        """
-         set_dataset
-         HACK
-         Updates the underlying dataset to point to new data values.
-         USAGE: used with add_points when the external dataset cannot be resized.
-
-           Params:
-            dataset = pointer to a data set stored in row major order. Must agree with data already stred
-            rows = number of rows (features) in the dataset
-
-        """
-        raise NotImplementedError('dont use')
-        if pts.dtype.type not in allowed_types:
-            raise FLANNException('Cannot handle type: %s' % pts.dtype)
-        pts = ensure_2d_array(pts, default_flags)
-        rows = pts.shape[0]
-        flann.set_dataset[self.__curindex_type](self.__curindex, pts, rows)
-        self.__curindex_data = pts
-        self.__added_data = []
 
     def save_index(self, filename):
         """
@@ -310,6 +297,7 @@ class FLANN(object):
 
         self.__curindex_data = pts
         self.__added_data = []
+        self.__removed_ids = []
         self.__curindex_type = pts.dtype.type
 
     def nn_index(self, qpts, num_neighbors=1, **kwargs):
@@ -404,6 +392,7 @@ class FLANN(object):
             self.__curindex = None
             self.__curindex_data = None
             self.__added_data = []
+            self.__removed_ids = []
 
     ##########################################################################
     # Clustering functions
