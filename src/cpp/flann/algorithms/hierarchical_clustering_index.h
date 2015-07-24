@@ -37,6 +37,7 @@
 #include <cassert>
 #include <limits>
 #include <cmath>
+#include <stdint.h>
 
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
@@ -361,6 +362,10 @@ private:
          */
         std::vector<PointInfo> points;
 
+		Node(){
+			pivot = NULL;
+			pivot_index = SIZE_MAX;
+		}
         /**
          * destructor
          * calling Node destructor explicitly
@@ -369,6 +374,8 @@ private:
         {
         	for(size_t i=0; i<childs.size(); i++){
         		childs[i]->~Node();
+				pivot = NULL;
+				pivot_index = -1;
         	}
         };
 
@@ -380,7 +387,10 @@ private:
     		Index* obj = static_cast<Index*>(ar.getObject());
     		ar & pivot_index;
     		if (Archive::is_loading::value) {
-    			pivot = obj->points_[pivot_index];
+				if (pivot_index != SIZE_MAX)
+					pivot = obj->points_[pivot_index];
+				else
+					pivot = NULL;
     		}
     		size_t childs_size;
     		if (Archive::is_saving::value) {
