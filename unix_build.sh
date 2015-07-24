@@ -80,6 +80,16 @@ sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
 #byte-compiling /home/joncrall/venv/lib/python2.7/site-packages/pyflann/index.py to index.pyc
 #byte-compiling /home/joncrall/venv/lib/python2.7/site-packages/pyflann/exceptions.py to exceptions.pyc
 
+flann_setuptools_install()
+{
+    cd $CODE_DIR/flann/src/python
+    ../../build/src/python/setup.py
+    python ../../build/src/python/setup.py develop
+    sudo python ../../build/src/python/setup.py develop
+
+    sudo python ../../build/src/python/setup.py develop --uninstall
+}
+
 
 uninstall_flann()
 {
