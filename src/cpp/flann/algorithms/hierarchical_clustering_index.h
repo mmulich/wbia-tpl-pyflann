@@ -38,6 +38,10 @@
 #include <limits>
 #include <cmath>
 
+#ifndef SIZE_MAX
+#define SIZE_MAX ((size_t) -1)
+#endif
+
 #include "flann/general.h"
 #include "flann/algorithms/nn_index.h"
 #include "flann/algorithms/dist.h"
@@ -361,6 +365,10 @@ private:
          */
         std::vector<PointInfo> points;
 
+		Node(){
+			pivot = NULL;
+			pivot_index = SIZE_MAX;
+		}
         /**
          * destructor
          * calling Node destructor explicitly
@@ -369,6 +377,8 @@ private:
         {
         	for(size_t i=0; i<childs.size(); i++){
         		childs[i]->~Node();
+				pivot = NULL;
+				pivot_index = -1;
         	}
         };
 
@@ -380,7 +390,10 @@ private:
     		Index* obj = static_cast<Index*>(ar.getObject());
     		ar & pivot_index;
     		if (Archive::is_loading::value) {
-    			pivot = obj->points_[pivot_index];
+				if (pivot_index != SIZE_MAX)
+					pivot = obj->points_[pivot_index];
+				else
+					pivot = NULL;
     		}
     		size_t childs_size;
     		if (Archive::is_saving::value) {
