@@ -58,6 +58,10 @@ make -j$NCPUS || { echo "FAILED MAKE" ; exit 1; }
 
 sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
 
+# setup to develop
+cd ../src/python
+sudo python ../../build/src/python/setup.py develop
+
 #python -c "import pyflann; print(pyflann)"
 
 #copying pyflann/__init__.py -> build/lib.linux-x86_64-2.7/pyflann
