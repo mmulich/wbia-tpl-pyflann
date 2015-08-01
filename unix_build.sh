@@ -84,6 +84,7 @@ sudo python ../../build/src/python/setup.py develop
 #byte-compiling /home/joncrall/venv/lib/python2.7/site-packages/pyflann/index.py to index.pyc
 #byte-compiling /home/joncrall/venv/lib/python2.7/site-packages/pyflann/exceptions.py to exceptions.pyc
 
+<<<<<<< Updated upstream
 flann_setuptools_install()
 {
     cd $CODE_DIR/flann/src/python
@@ -92,6 +93,14 @@ flann_setuptools_install()
     sudo python ../../build/src/python/setup.py develop
 
     sudo python ../../build/src/python/setup.py develop --uninstall
+=======
+setupinstall_flann()
+{
+    code 
+    cd flann
+    cd src/python
+    python ../../build/src/python/setup.py install
+>>>>>>> Stashed changes
 }
 
 

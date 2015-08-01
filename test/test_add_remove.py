@@ -14,10 +14,7 @@ VALID_INT_TYPES = (np.typeDict['int64'],
 
 
 def is_int_type(dtype):
-    if sys.platform == 'win32':
-        return dtype.type in VALID_INT_TYPES
-    else:
-        return dtype in VALID_INT_TYPES
+    return dtype in VALID_INT_TYPES
 
 
 def rand_vecs(num, dim, rng=np.random, dtype=np.uint8):
