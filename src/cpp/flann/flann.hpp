@@ -58,6 +58,12 @@ inline void log_verbosity(int level)
     }
 }
 
+
+inline int get_verbosity()
+{
+    return Logger::getLevel();
+}
+
 /**
  * (Deprecated) Index parameters for creating a saved index.
  */
@@ -83,24 +89,29 @@ public:
     Index(const IndexParams& params, Distance distance = Distance() )
         : index_params_(params)
     {
+        Logger::debug("[FLANN.Index(1)] Enter constructor.");
         flann_algorithm_t index_type = get_param<flann_algorithm_t>(params,"algorithm");
         loaded_ = false;
 
         Matrix<ElementType> features;
         if (index_type == FLANN_INDEX_SAVED) {
+            Logger::debug("[FLANN.Index(1)] Loading saved index");
             nnIndex_ = load_saved_index(features, get_param<std::string>(params,"filename"), distance);
             loaded_ = true;
         }
         else {
+            Logger::debug("[FLANN.Index(1)] Create index by type");
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
             nnIndex_ = create_index_by_type<Distance>(index_type, features, params, distance);
         }
+        Logger::debug("[FLANN.Index(1)] Exit constructor.");
     }
 
 
     Index(const Matrix<ElementType>& features, const IndexParams& params, Distance distance = Distance() )
         : index_params_(params)
     {
+        Logger::debug("[FLANN.Index(2)] Enter constructor.");
         flann_algorithm_t index_type = get_param<flann_algorithm_t>(params,"algorithm");
         loaded_ = false;
 
@@ -112,6 +123,7 @@ public:
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
             nnIndex_ = create_index_by_type<Distance>(index_type, features, params, distance);
         }
+        Logger::debug("[FLANN.Index(2)] Exit constructor.");
     }
 
 
@@ -128,7 +140,9 @@ public:
 
     virtual ~Index()
     {
+        Logger::debug("[FLANN.~Index()] Destructor Enter.");
         delete nnIndex_;
+        Logger::debug("[FLANN.~Index()] Destructor Exit.");
     }
 
     /**
@@ -176,12 +190,14 @@ public:
      */
     void save(std::string filename)
     {
+        Logger::debug("[FLANN.save_index()] Enter.");
         FILE* fout = fopen(filename.c_str(), "wb");
         if (fout == NULL) {
             throw FLANNException("Cannot open file");
         }
         nnIndex_->saveIndex(fout);
         fclose(fout);
+        Logger::debug("[FLANN.save_index()] Exit.");
     }
 
     /**
@@ -370,6 +386,7 @@ public:
 private:
     IndexType* load_saved_index(const Matrix<ElementType>& dataset, const std::string& filename, Distance distance)
     {
+        Logger::debug("[FLANN.load_saved_index()] Enter.");
         FILE* fin = fopen(filename.c_str(), "rb");
         if (fin == NULL) {
             return NULL;
@@ -385,7 +402,7 @@ private:
         rewind(fin);
         nnIndex->loadIndex(fin);
         fclose(fin);
-
+        Logger::debug("[FLANN.load_saved_index()] Exit.");
         return nnIndex;
     }
 

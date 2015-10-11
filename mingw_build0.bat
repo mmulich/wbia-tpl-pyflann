@@ -34,7 +34,7 @@ echo "BUILDING FLANN TAKES AWHILE. BE PATIENT."
 :: mingw32-make -j7 "MAKE=mingw32-make -j3" -f CMakeFiles\Makefile2 all
 
 make
-make install
+REM make install
 exit /b
 
 :exit

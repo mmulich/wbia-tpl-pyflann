@@ -59,6 +59,8 @@ class Logger
 
     void _setDestination(const char* name)
     {
+        // TODO
+        // this->destination_name = name
         if (name==NULL) {
             stream = stdout;
         }
@@ -130,6 +132,8 @@ public:
 private:
     FILE* stream;
     int logLevel;
+    //std::string destination_name;
+    //const char* destination_name; // TODO: save destination name 
 };
 
 }
