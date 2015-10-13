@@ -4,34 +4,30 @@
 
 #rm -rf build
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
-mkdir build
+mkdir build27
 
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
 
-cd build
+cd build27
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
 # Grab correct python executable
 export PYEXE=$(which python2.7)
 export PYTHON_EXECUTABLE=$($PYEXE -c "import sys; print(sys.executable)")
-# This gives /usr for python2.7, should give /usr/local?
-#export CMAKE_INSTALL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")
-#export CMAKE_INSTALL_PREFIX=/usr/local
-echo "CMAKE_INSTALL_PREFIX     = $CMAKE_INSTALL_PREFIX"
-echo "PYTHON_EXECUTABLE        = $PYTHON_EXECUTABLE"
-echo "PYEXE        = $PYEXE"
+if [[ "$VIRTUAL_ENV" == ""  ]]; then
+    export LOCAL_PREFIX=/usr/local
+    export _SUDO="sudo"
+else
+    export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local
+    export _SUDO=""
+fi
 
-## Configure make build install
-#cmake -G "Unix Makefiles" \
-#    -DBUILD_MATLAB_BINDINGS=Off \
-#    -DCMAKE_BUILD_TYPE=Release \
-#    -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE \
-#    ..
-
-    #-DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX \
-
+echo "PYEXE              = $PYEXE"
+echo "PYTHON_EXECUTABLE  = $PYTHON_EXECUTABLE"
+echo "LOCAL_PREFIX       = $LOCAL_PREFIX"
+echo "INSTALL_CMD        = $INSTALL_CMD"
 
 # Configure make build install
 cmake -G "Unix Makefiles" \
@@ -39,8 +35,8 @@ cmake -G "Unix Makefiles" \
     -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE \
     -DBUILD_PYTHON_BINDINGS=On \
     -DBUILD_MATLAB_BINDINGS=Off \
-    -DLATEX_OUTPUT_PATH=. \
     -DBUILD_CUDA_LIB=Off\
+    -DCMAKE_INSTALL_PREFIX=$LOCAL_PREFIX\
     ..
 
     #-DNVCC_COMPILER_BINDIR=/usr/bin/gcc \
@@ -54,15 +50,17 @@ cmake -G "Unix Makefiles" \
     #-DCUDA_NVCC_FLAGS=-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_20,code=sm_21 
 
 make -j$NCPUS 
-make -j$NCPUS || { echo "FAILED MAKE" ; exit 1; }
+$_SUDO make install
+#make -j$NCPUS || { echo "FAILED MAKE" ; exit 1; }
 
-sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
+#sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
 
-# setup to develop
+# setup to develop (need to be in python source dir, setup is in build)
 cd ../src/python
-sudo python ../../build/src/python/setup.py develop
+$_SUDO python ../../build27/src/python/setup.py develop
 
-#python -c "import pyflann; print(pyflann)"
+python -c "import pyflann; print(pyflann)"
+python -c "import pyflann; print(pyflann.__file__)"
 
 #copying pyflann/__init__.py -> build/lib.linux-x86_64-2.7/pyflann
 #copying pyflann/flann_ctypes.py -> build/lib.linux-x86_64-2.7/pyflann
