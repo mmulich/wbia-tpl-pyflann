@@ -161,7 +161,7 @@ def load_flann_library():
         for libname in libnames:
             try:
                 libpath = os.path.join(root_dir, libdir, libname)
-                print('Trying %s' % (libpath,))
+                #print('Trying %s' % (libpath,))
                 flannlib = cdll[libpath]
                 return flannlib
             except Exception:
@@ -181,7 +181,7 @@ def load_flann_library():
     # a full path as a last resort
     for libname in libnames:
         try:
-            #print 'Trying',libname
+            #print('Trying %s' % (libname,))
             flannlib = cdll[libname]
             return flannlib
         except:
