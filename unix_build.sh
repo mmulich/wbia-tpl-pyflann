@@ -4,12 +4,12 @@
 
 #rm -rf build
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
-mkdir build27
+mkdir build
 
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
 
-cd build27
+cd build
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
@@ -56,11 +56,12 @@ $_SUDO make install
 #sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
 
 # setup to develop (need to be in python source dir, setup is in build)
-cd ../src/python
-$_SUDO python ../../build27/src/python/setup.py develop
+# FIXME: messes up the code to find the libflann.so file when using build27
+#cd ../src/python
+#$_SUDO python ../../build/src/python/setup.py develop
 
-python -c "import pyflann; print(pyflann)"
 python -c "import pyflann; print(pyflann.__file__)"
+python -c "import pyflann; print(pyflann)"
 
 #copying pyflann/__init__.py -> build/lib.linux-x86_64-2.7/pyflann
 #copying pyflann/flann_ctypes.py -> build/lib.linux-x86_64-2.7/pyflann
