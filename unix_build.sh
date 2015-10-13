@@ -43,6 +43,10 @@ cmake -G "Unix Makefiles" \
     -DBUILD_CUDA_LIB=Off\
     ..
 
+    #-DBUILD_EXAMPLES=Off \
+    #-DBUILD_DOC=Off \
+    #-DBUILD_TESTS=Off \
+
     #-DNVCC_COMPILER_BINDIR=/usr/bin/gcc \
     #-DCUDA_BUILD_CUBIN=On \
     #-DCUDA_npp_LIBRARY=/usr/local/cuda-6.0/lib64/libnppc.so \

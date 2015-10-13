@@ -70,6 +70,7 @@ class Logger
                 stream = stdout;
             }
         }
+        instance().log(5, "[FLANN] log.setDestination(%s)\n", name);
     }
 
     int _log(int level, const char* fmt, va_list arglist)
@@ -84,7 +85,10 @@ public:
      * Sets the logging level. All messages with lower priority will be ignored.
      * @param level Logging level
      */
-    static void setLevel(int level) { instance().logLevel = level; }
+    static void setLevel(int level) { 
+        instance().logLevel = level; 
+        instance().log(5, "[FLANN] log.setLevel(%d)\a", level);
+    }
 
     /**
      * Returns the currently set logging level.
@@ -96,7 +100,9 @@ public:
      * Sets the logging destination
      * @param name Filename or NULL for console
      */
-    static void setDestination(const char* name) { instance()._setDestination(name); }
+    static void setDestination(const char* name) { 
+        instance()._setDestination(name);
+    }
 
     /**
      * Print log message
