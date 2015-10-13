@@ -160,8 +160,9 @@ def load_flann_library():
     while root_dir is not None:
         for libname in libnames:
             try:
-                #print 'Trying ',os.path.join(root_dir,'lib',libname)
-                flannlib = cdll[os.path.join(root_dir, libdir, libname)]
+                libpath = os.path.join(root_dir, libdir, libname)
+                print('Trying %s' % (libpath,))
+                flannlib = cdll[libpath]
                 return flannlib
             except Exception:
                 pass
