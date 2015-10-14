@@ -156,6 +156,21 @@ FLANN_EXPORT flann_index_t flann_build_index_int(int* dataset,
                                                  struct FLANNParameters* flann_params);
 
 /**
+Deletes removed points in index
+ */
+
+FLANN_EXPORT void flann_clean_removed_points(flann_index_t index_ptr);
+
+FLANN_EXPORT void flann_clean_removed_points_float(flann_index_t index_ptr);
+
+FLANN_EXPORT void flann_clean_removed_points_double(flann_index_t index_ptr);
+
+FLANN_EXPORT void flann_clean_removed_points_int(flann_index_t index_ptr);
+
+FLANN_EXPORT void flann_clean_removed_points_byte(flann_index_t index_ptr);
+
+
+/**
     Returns the amount of memory used by the index
 
     Returns: int

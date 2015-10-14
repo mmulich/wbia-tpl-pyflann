@@ -31,15 +31,22 @@ echo "LOCAL_PREFIX       = $LOCAL_PREFIX"
 echo "_SUDO              = $_SUDO"
 
 # Configure make build install
+#-DCMAKE_BUILD_TYPE="Release" \
 cmake -G "Unix Makefiles" \
-    -DCMAKE_BUILD_TYPE="Release" \
+    -DCMAKE_BUILD_TYPE="Debug" \
     -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE \
     -DBUILD_PYTHON_BINDINGS=On \
     -DBUILD_MATLAB_BINDINGS=Off \
     -DCMAKE_INSTALL_PREFIX=$LOCAL_PREFIX \
     -DLATEX_OUTPUT_PATH=. \
     -DBUILD_CUDA_LIB=Off\
+    -CPACK_SOURCE_TGZ=Off
+    -CPACK_SOURCE_TBZ2=Off
+    -CPACK_SOURCE_TZ=Off
     ..
+
+    # Show expanded templates
+    #-DCMAKE_C_FLAGS="-E" \  
 
     #-DBUILD_EXAMPLES=Off \
     #-DBUILD_DOC=Off \

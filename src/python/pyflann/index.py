@@ -277,6 +277,12 @@ class FLANN(object):
         #    self.remove_point(id_)
         #    #flann.remove_point[self.__curindex_type](self.__curindex, id_)
 
+    def clean_removed_points(self):
+        """
+        Deletes removed points in index?
+        """
+        flann.clean_removed_points[self.__curindex_type](self.__curindex)
+
     def save_index(self, filename):
         """
         This saves the index to a disk file.

@@ -70,7 +70,7 @@ class Logger
                 stream = stdout;
             }
         }
-        instance().log(5, "[FLANN] log.setDestination(%s)\n", name);
+        instance().log(5, "[logger.h] log.setDestination(%s)\n", name);
     }
 
     int _log(int level, const char* fmt, va_list arglist)
@@ -87,7 +87,7 @@ public:
      */
     static void setLevel(int level) { 
         instance().logLevel = level; 
-        instance().log(5, "[FLANN] log.setLevel(%d)\n", level);
+        instance().log(5, "[logger.h] log.setLevel(%d)\n", level);
     }
 
     /**

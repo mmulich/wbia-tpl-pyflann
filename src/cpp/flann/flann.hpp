@@ -89,29 +89,29 @@ public:
     Index(const IndexParams& params, Distance distance = Distance() )
         : index_params_(params)
     {
-        Logger::debug("[FLANN.Index(1)] Enter constructor.\n");
+        Logger::debug("[Index] constructor(1)\n");
         flann_algorithm_t index_type = get_param<flann_algorithm_t>(params,"algorithm");
         loaded_ = false;
 
         Matrix<ElementType> features;
         if (index_type == FLANN_INDEX_SAVED) {
-            Logger::debug("[FLANN.Index(1)] Loading saved index\n");
+            Logger::debug("[Index] Loading saved index\n");
             nnIndex_ = load_saved_index(features, get_param<std::string>(params,"filename"), distance);
             loaded_ = true;
         }
         else {
-            Logger::debug("[FLANN.Index(1)] Create index by type\n");
+            Logger::debug("[Index] Create index by type\n");
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
             nnIndex_ = create_index_by_type<Distance>(index_type, features, params, distance);
         }
-        Logger::debug("[FLANN.Index(1)] Exit constructor.\n");
+        Logger::debug("[Index] Finished constructor(1)\n");
     }
 
 
     Index(const Matrix<ElementType>& features, const IndexParams& params, Distance distance = Distance() )
         : index_params_(params)
     {
-        Logger::debug("[FLANN.Index(2)] Enter constructor.\n");
+        Logger::debug("[Index] constructor(2)\n");
         flann_algorithm_t index_type = get_param<flann_algorithm_t>(params,"algorithm");
         loaded_ = false;
 
@@ -123,26 +123,27 @@ public:
         	flann_algorithm_t index_type = get_param<flann_algorithm_t>(params, "algorithm");
             nnIndex_ = create_index_by_type<Distance>(index_type, features, params, distance);
         }
-        Logger::debug("[FLANN.Index(2)] Exit constructor.\n");
+        Logger::debug("[Index] Finished constructor(2)\n");
     }
 
 
     Index(const Index& other) : loaded_(other.loaded_), index_params_(other.index_params_)
     {
+        Logger::debug("[Index] constructor(3)\n");
     	nnIndex_ = other.nnIndex_->clone();
     }
 
     Index& operator=(Index other)
     {
+        Logger::debug("[Index] Swap Operator\n");
     	this->swap(other);
     	return *this;
     }
 
     virtual ~Index()
     {
-        Logger::debug("[FLANN.~Index()] Destructor Enter.\n");
+        Logger::debug("[Index] Deleting Index.\n");
         delete nnIndex_;
-        Logger::debug("[FLANN.~Index()] Destructor Exit.\n");
     }
 
     /**
@@ -150,6 +151,8 @@ public:
      */
     void buildIndex()
     {
+        Logger::debug("[Index] buildIndex()\n");
+        Logger::debug("[Index] loaded_ = %d\n", loaded_);
         if (!loaded_) {
             nnIndex_->buildIndex();
         }
@@ -157,12 +160,13 @@ public:
 
     void buildIndex(const Matrix<ElementType>& points)
     {
+        Logger::debug("[Index] buildIndex(points.shape=(%d, %d))\n", points.rows, points.cols);
     	nnIndex_->buildIndex(points);
     }
 
     void addPoints(const Matrix<ElementType>& points, float rebuild_threshold = 2)
     {
-        Logger::debug("[FLANN] addPoints(points.shape=(%d, %d)).\n", 
+        Logger::debug("[Index] addPoints(points.shape=(%d, %d))\n", 
                 points.rows, points.cols);
         nnIndex_->addPoints(points, rebuild_threshold);
     }
@@ -173,7 +177,6 @@ public:
      */
     void removePoint(size_t point_id)
     {
-        //Logger::debug("[FLANN.removePoint].\n");
     	nnIndex_->removePoint(point_id);
     }
 
@@ -185,8 +188,17 @@ public:
      */
     void removePoints(int* id_list, int num)
     {
-        Logger::debug("[FLANN] removePoints(num=%d)\n", num);
+        Logger::debug("[Index] removePoints(num=%d)\n", num);
     	nnIndex_->removePoints(id_list, num);
+    }
+
+    /**
+     * Deletes points flagged as removed
+     */
+    void cleanRemovedPoints()
+    {
+        Logger::debug("[Index] cleanRemovedPoints()\n");
+    	nnIndex_->cleanRemovedPoints();
     }
 
     /**
@@ -205,15 +217,15 @@ public:
      */
     void save(std::string filename)
     {
-        Logger::debug("[FLANN] save_index()\n");
-        Logger::debug("[FLANN] * filename=%s.\n", filename.c_str());
+        Logger::debug("[Index] save_index()\n");
+        Logger::debug("[Index] * filename=%s\n", filename.c_str());
         FILE* fout = fopen(filename.c_str(), "wb");
         if (fout == NULL) {
             throw FLANNException("Cannot open file");
         }
         nnIndex_->saveIndex(fout);
         fclose(fout);
-        Logger::debug("[FLANN] finished save\n");
+        Logger::debug("[Index] finished save\n");
     }
 
     /**
@@ -402,8 +414,8 @@ public:
 private:
     IndexType* load_saved_index(const Matrix<ElementType>& dataset, const std::string& filename, Distance distance)
     {
-        Logger::debug("[FLANN] load_saved_index().\n");
-        Logger::debug("[FLANN] * filename=%s.\n", filename.c_str());
+        Logger::debug("[Index] load_saved_index()\n");
+        Logger::debug("[Index] * filename=%s\n", filename.c_str());
         FILE* fin = fopen(filename.c_str(), "rb");
         if (fin == NULL) {
             return NULL;
@@ -419,7 +431,7 @@ private:
         rewind(fin);
         nnIndex->loadIndex(fin);
         fclose(fin);
-        Logger::debug("[FLANN] finished load.\n");
+        Logger::debug("[Index] finished load_saved_index\n");
         return nnIndex;
     }
 

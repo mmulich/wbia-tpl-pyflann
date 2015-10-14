@@ -246,6 +246,16 @@ flannlib.flann_build_index_%(C)s.argtypes = [
 flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
 """)
 
+flann.clean_removed_points = {}
+define_functions(r"""
+flannlib.flann_clean_removed_points_%(C)s.restype = None
+flannlib.flann_clean_removed_points_%(C)s.argtypes = [
+        FLANN_INDEX,  # index_ptr
+]
+flann.clean_removed_points[%(numpy)s] = flannlib.flann_clean_removed_points_%(C)s
+""")
+
+
 flann.used_memory = {}
 define_functions(r"""
 flannlib.flann_used_memory_%(C)s.restype = c_int

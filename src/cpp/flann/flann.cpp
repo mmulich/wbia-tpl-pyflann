@@ -29,6 +29,8 @@
 #define FLANN_FIRST_MATCH
 
 #include "flann.h"
+    
+
 
 
 struct FLANNParameters DEFAULT_FLANN_PARAMETERS = {
@@ -200,6 +202,211 @@ int flann_get_distance_order() {
 }
 
 
+// References: http://stackoverflow.com/questions/13842468/comma-in-c-c-macro
+#define SINGLE_ARG(...) __VA_ARGS__
+
+// Macro defines bindings to each type of distance metric that could 
+// be used. typed_sigargs and callargs must be wrapped in a SINGLE_ARG
+// statment if they contain commas
+#define DISTANCE_TYPE_BINDINGS(return_type, binding_name, typed_sigargs, callargs) \
+template<typename T> \
+return_type _flann_##binding_name(typed_sigargs)\
+{\
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {\
+         return __flann_##binding_name<L2<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {\
+         return __flann_##binding_name<L1<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {\
+         return __flann_##binding_name<MinkowskiDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {\
+         return __flann_##binding_name<HistIntersectionDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_HELLINGER) {\
+         return __flann_##binding_name<HellingerDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {\
+         return __flann_##binding_name<ChiSquareDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {\
+         return __flann_##binding_name<KL_Divergence<T> >(callargs);\
+    }\
+    else {\
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");\
+        throw 0;\
+    }\
+}\
+
+
+#define DISTANCE_TYPE_BINDINGS2(return_type, binding_name, typed_sigargs, callargs) \
+template<typename T, typename R> \
+return_type _flann_##binding_name(typed_sigargs)\
+{\
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {\
+         return __flann_##binding_name<L2<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {\
+         return __flann_##binding_name<L1<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {\
+         return __flann_##binding_name<MinkowskiDistance<T> >(callargs, MinkowskiDistance<T>(flann_distance_order));\
+    }\
+    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {\
+         return __flann_##binding_name<HistIntersectionDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_HELLINGER) {\
+         return __flann_##binding_name<HellingerDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {\
+         return __flann_##binding_name<ChiSquareDistance<T> >(callargs);\
+    }\
+    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {\
+         return __flann_##binding_name<KL_Divergence<T> >(callargs);\
+    }\
+    else {\
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");\
+        return -1;\
+    }\
+}\
+
+
+// Macro defines the logic for the data type bindings seen by python ctypes
+#define DATA_TYPE_BINDINGS_BODY(return_type, binding_name, typed_sigargs, callargs)\
+return_type flann_##binding_name(typed_sigargs)\
+{\
+    return _flann_##binding_name<float>(callargs);\
+}\
+return_type flann_##binding_name##_float(typed_sigargs)\
+{\
+    return _flann_##binding_name<float>(callargs);\
+}\
+return_type flann_##binding_name##_double(typed_sigargs)\
+{\
+    return _flann_##binding_name<double>(callargs);\
+}\
+return_type flann_##binding_name##_int(typed_sigargs)\
+{\
+    return _flann_##binding_name<int>(callargs);\
+}\
+return_type flann_##binding_name##_byte(typed_sigargs)\
+{\
+    return _flann_##binding_name<unsigned char>(callargs);\
+}\
+
+
+// Simplified bindings 
+#undef DISTANCE_TYPE_BINDINGS
+#define DISTANCE_TYPE_BINDINGS(return_type, binding_name, typed_sigargs, callargs) \
+template<typename T> \
+return_type _flann_##binding_name(typed_sigargs)\
+{\
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {\
+         return __flann_##binding_name<L2<T> >(callargs);\
+    }\
+    else {\
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");\
+        throw 0;\
+    }\
+}\
+
+#undef DISTANCE_TYPE_BINDINGS2
+#define DISTANCE_TYPE_BINDINGS2(return_type, binding_name, typed_sigargs, callargs) \
+template<typename T, typename R> \
+return_type _flann_##binding_name(typed_sigargs)\
+{\
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {\
+         return __flann_##binding_name<L2<T> >(callargs);\
+    }\
+    else {\
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");\
+        return -1;\
+    }\
+}\
+
+
+// FIXME: datatype <T> in the typed sigargs needs to be expanded
+#define FLANN_CPP_BINDING(return_type, binding_name, typed_sigargs, callargs) \
+template<typename T> \
+return_type _flann_##binding_name(typed_sigargs)\
+{\
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {\
+         return __flann_##binding_name<L2<T> >(callargs);\
+    }\
+    else {\
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");\
+        throw 0;\
+    }\
+}\
+\
+return_type flann_##binding_name(float* typed_sigargs)\
+{\
+    return _flann_##binding_name<float>(callargs);\
+}\
+return_type flann_##binding_name##_float(float* typed_sigargs)\
+{\
+    return _flann_##binding_name<float>(callargs);\
+}\
+return_type flann_##binding_name##_double(double* typed_sigargs)\
+{\
+    return _flann_##binding_name<double>(callargs);\
+}\
+return_type flann_##binding_name##_int(int* typed_sigargs)\
+{\
+    return _flann_##binding_name<int>(callargs);\
+}\
+return_type flann_##binding_name##_byte(unsigned char* typed_sigargs)\
+{\
+    return _flann_##binding_name<unsigned char>(callargs);\
+}
+
+
+// clean_removed_points BEGIN
+template<typename Distance>
+void __flann_clean_removed_points(flann_index_t index_ptr)
+{
+    Logger::debug("[flann.cpp] __flann_clean_removed_points\n");
+    try {
+        if (index_ptr==NULL) {
+            throw FLANNException("Invalid index");
+        }
+        Index<Distance>* index = (Index<Distance>*)index_ptr;
+        return index->cleanRemovedPoints();
+    }
+    catch (std::runtime_error& e) {
+        Logger::error("Caught exception: %s\n",e.what());
+        throw;
+    }
+}
+
+DISTANCE_TYPE_BINDINGS(void, clean_removed_points,
+        SINGLE_ARG(flann_index_t index_ptr),
+        SINGLE_ARG(index_ptr))
+
+void flann_clean_removed_points(flann_index_t index_ptr)
+{
+    _flann_clean_removed_points<float>(index_ptr);
+}
+void flann_clean_removed_points_float(flann_index_t index_ptr)
+{
+    _flann_clean_removed_points<float>(index_ptr);
+}
+void flann_clean_removed_points_double(flann_index_t index_ptr)
+{
+    _flann_clean_removed_points<double>(index_ptr);
+}
+void flann_clean_removed_points_int(flann_index_t index_ptr)
+{
+    _flann_clean_removed_points<int>(index_ptr);
+}
+void flann_clean_removed_points_byte(flann_index_t index_ptr)
+{
+    _flann_clean_removed_points<unsigned char>(index_ptr);
+}
+// clean_removed_points END
+
+
 // used_memory BEGIN
 template<typename Distance>
 int __flann_used_memory(flann_index_t index_ptr)
@@ -217,35 +424,47 @@ int __flann_used_memory(flann_index_t index_ptr)
     }
 }
 
-template<typename T>
-int _flann_used_memory(flann_index_t index_ptr)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-         return __flann_used_memory<L2<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-         return __flann_used_memory<L1<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-         return __flann_used_memory<MinkowskiDistance<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-         return __flann_used_memory<HistIntersectionDistance<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-         return __flann_used_memory<HellingerDistance<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-         return __flann_used_memory<ChiSquareDistance<T> >(index_ptr);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-         return __flann_used_memory<KL_Divergence<T> >(index_ptr);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        throw 0; 
-    }
-}
+//FLANN_CPP_BINDING(int, used_memory, 
+//        SINGLE_ARG(flann_index_t index_ptr), 
+//        SINGLE_ARG(index_ptr))
+
+DISTANCE_TYPE_BINDINGS(int, used_memory, 
+        SINGLE_ARG(flann_index_t index_ptr), 
+        SINGLE_ARG(index_ptr))
+
+//DATA_TYPE_BINDINGS_BODY(int, used_memory, 
+//        SINGLE_ARG(flann_index_t index_ptr), 
+//        SINGLE_ARG(index_ptr))
+
+//template<typename T>
+//int _flann_used_memory(flann_index_t index_ptr)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//         return __flann_used_memory<L2<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//         return __flann_used_memory<L1<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//         return __flann_used_memory<MinkowskiDistance<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//         return __flann_used_memory<HistIntersectionDistance<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//         return __flann_used_memory<HellingerDistance<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//         return __flann_used_memory<ChiSquareDistance<T> >(index_ptr);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//         return __flann_used_memory<KL_Divergence<T> >(index_ptr);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        throw 0; 
+//    }
+//}
 int flann_used_memory(flann_index_t index_ptr)
 {
     return _flann_used_memory<float>(index_ptr);
@@ -274,6 +493,7 @@ template<typename Distance>
 flann_index_t __flann_build_index(typename Distance::ElementType* dataset, int rows, int cols, float* speedup,
                                   FLANNParameters* flann_params, Distance d = Distance())
 {
+    Logger::debug("[flann.cpp] __flann_build_index\n");
     typedef typename Distance::ElementType ElementType;
     try {
 
@@ -303,35 +523,47 @@ flann_index_t __flann_build_index(typename Distance::ElementType* dataset, int r
     }
 }
 
-template<typename T>
-flann_index_t _flann_build_index(T* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_build_index<L2<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_build_index<L1<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_build_index<MinkowskiDistance<T> >(dataset, rows, cols, speedup, flann_params, MinkowskiDistance<T>(flann_distance_order));
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_build_index<HistIntersectionDistance<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_build_index<HellingerDistance<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_build_index<ChiSquareDistance<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_build_index<KL_Divergence<T> >(dataset, rows, cols, speedup, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return NULL;
-    }
-}
+//FLANN_CPP_BINDING(flann_index_t, build_index, 
+//        SINGLE_ARG(T* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params), 
+//        SINGLE_ARG(dataset, rows, cols, speedup, flann_params))
+
+DISTANCE_TYPE_BINDINGS(flann_index_t, build_index, 
+        SINGLE_ARG(T* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params), 
+        SINGLE_ARG(dataset, rows, cols, speedup, flann_params));
+
+//DATA_TYPE_BINDINGS_BODY(flann_index_t, build_index, 
+        //SINGLE_ARG(dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params), 
+        //SINGLE_ARG(dataset, rows, cols, speedup, flann_params));
+
+//template<typename T>
+//flann_index_t _flann_build_index(T* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params)
+//{
+    //if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+        //return __flann_build_index<L2<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+        //return __flann_build_index<L1<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+        //return __flann_build_index<MinkowskiDistance<T> >(dataset, rows, cols, speedup, flann_params, MinkowskiDistance<T>(flann_distance_order));
+    //}
+    //else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+        //return __flann_build_index<HistIntersectionDistance<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+        //return __flann_build_index<HellingerDistance<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+        //return __flann_build_index<ChiSquareDistance<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+        //return __flann_build_index<KL_Divergence<T> >(dataset, rows, cols, speedup, flann_params);
+    //}
+    //else {
+        //Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+        //return NULL;
+    //}
+//}
 
 flann_index_t flann_build_index(float* dataset, int rows, int cols, float* speedup, FLANNParameters* flann_params)
 {
@@ -362,6 +594,7 @@ flann_index_t flann_build_index_int(int* dataset, int rows, int cols, float* spe
 template<typename Distance>
 void __flann_add_points(flann_index_t index_ptr,  typename Distance::ElementType* dataset, int rows, int rebuild_threshhold)
 {
+    Logger::debug("[flann.cpp] __flann_add_points\n");
     typedef typename Distance::ElementType ElementType;
     try {
         if (index_ptr==NULL) {
@@ -379,34 +612,39 @@ void __flann_add_points(flann_index_t index_ptr,  typename Distance::ElementType
     }
 }
 
-template<typename T>
-void _flann_add_points(flann_index_t index_ptr, T* dataset, int rows, int rebuild_threshold)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-         __flann_add_points<L2<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-         __flann_add_points<L1<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-       __flann_add_points<MinkowskiDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-         __flann_add_points<HistIntersectionDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-         __flann_add_points<HellingerDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-         __flann_add_points<ChiSquareDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-         __flann_add_points<KL_Divergence<T> >(index_ptr, dataset, rows, rebuild_threshold);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-    }
-}
+
+DISTANCE_TYPE_BINDINGS(void, add_points, 
+        SINGLE_ARG(flann_index_t index_ptr, T* dataset, int rows, int rebuild_threshold), 
+        SINGLE_ARG(index_ptr, dataset, rows, rebuild_threshold));
+
+//template<typename T>
+//void _flann_add_points(flann_index_t index_ptr, T* dataset, int rows, int rebuild_threshold)
+//{
+    //if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+         //__flann_add_points<L2<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+         //__flann_add_points<L1<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+       //__flann_add_points<MinkowskiDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+         //__flann_add_points<HistIntersectionDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+         //__flann_add_points<HellingerDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+         //__flann_add_points<ChiSquareDistance<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+         //__flann_add_points<KL_Divergence<T> >(index_ptr, dataset, rows, rebuild_threshold);
+    //}
+    //else {
+        //Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+    //}
+//}
 
 void flann_add_points(flann_index_t index_ptr, float* dataset, int rows, int rebuild_threshhold)
 {
@@ -435,6 +673,7 @@ void flann_add_points_int(flann_index_t index_ptr, int* dataset, int rows, int r
 template<typename Distance>
 void __flann_remove_point(flann_index_t index_ptr, int id_)
 {
+    Logger::debug("[flann.cpp] __flann_remove_point\n");
     try {
         if (index_ptr==NULL) {
             throw FLANNException("Invalid index");
@@ -449,34 +688,38 @@ void __flann_remove_point(flann_index_t index_ptr, int id_)
     }
 }
 
-template<typename T>
-void _flann_remove_point(flann_index_t index_ptr, int id_)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-         __flann_remove_point<L2<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-         __flann_remove_point<L1<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-       __flann_remove_point<MinkowskiDistance<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-         __flann_remove_point<HistIntersectionDistance<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-         __flann_remove_point<HellingerDistance<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-         __flann_remove_point<ChiSquareDistance<T> >(index_ptr, id_);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-         __flann_remove_point<KL_Divergence<T> >(index_ptr, id_);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-    }
-}
+DISTANCE_TYPE_BINDINGS(void, remove_point, 
+        SINGLE_ARG(flann_index_t index_ptr, int id_), 
+        SINGLE_ARG(index_ptr, id_));
+
+//template<typename T>
+//void _flann_remove_point(flann_index_t index_ptr, int id_)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//         __flann_remove_point<L2<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//         __flann_remove_point<L1<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//       __flann_remove_point<MinkowskiDistance<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//         __flann_remove_point<HistIntersectionDistance<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//         __flann_remove_point<HellingerDistance<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//         __flann_remove_point<ChiSquareDistance<T> >(index_ptr, id_);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//         __flann_remove_point<KL_Divergence<T> >(index_ptr, id_);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//    }
+//}
 void flann_remove_point(flann_index_t index_ptr, int id_)
 {
     _flann_remove_point<float>(index_ptr, id_);
@@ -504,7 +747,7 @@ void flann_remove_point_byte(flann_index_t index_ptr, int id_)
 template<typename Distance>
 void __flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
 {
-
+    Logger::debug("[flann.cpp] __flann_remove_points\n");
     //typedef typename Distance::ElementType ElementType;
     try {
         if (index_ptr==NULL) {
@@ -520,35 +763,38 @@ void __flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
     }
 }
 
-template<typename T>
-void _flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-         return __flann_remove_points<L2<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-         return __flann_remove_points<L1<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-         return __flann_remove_points<MinkowskiDistance<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-         return __flann_remove_points<HistIntersectionDistance<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-         return __flann_remove_points<HellingerDistance<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-         return __flann_remove_points<ChiSquareDistance<T> >(index_ptr, id_list, num);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-         return __flann_remove_points<KL_Divergence<T> >(index_ptr, id_list, num);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        throw 0;
-    }
-}
+DISTANCE_TYPE_BINDINGS(void, remove_points, 
+        SINGLE_ARG(flann_index_t index_ptr, int* id_list, int num), 
+        SINGLE_ARG(index_ptr, id_list, num));
+//template<typename T>
+//void _flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//         return __flann_remove_points<L2<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//         return __flann_remove_points<L1<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//         return __flann_remove_points<MinkowskiDistance<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//         return __flann_remove_points<HistIntersectionDistance<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//         return __flann_remove_points<HellingerDistance<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//         return __flann_remove_points<ChiSquareDistance<T> >(index_ptr, id_list, num);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//         return __flann_remove_points<KL_Divergence<T> >(index_ptr, id_list, num);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        throw 0;
+//    }
+//}
 void flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
 {
     _flann_remove_points<float>(index_ptr, id_list, num);
@@ -575,6 +821,7 @@ void flann_remove_points_byte(flann_index_t index_ptr, int* id_list, int num)
 template<typename Distance>
 int __flann_save_index(flann_index_t index_ptr, char* filename)
 {
+    Logger::debug("[flann.cpp] __flann_save_index\n");
     try {
         if (index_ptr==NULL) {
             throw FLANNException("Invalid index");
@@ -591,35 +838,38 @@ int __flann_save_index(flann_index_t index_ptr, char* filename)
     }
 }
 
-template<typename T>
-int _flann_save_index(flann_index_t index_ptr, char* filename)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_save_index<L2<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_save_index<L1<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_save_index<MinkowskiDistance<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_save_index<HistIntersectionDistance<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_save_index<HellingerDistance<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_save_index<ChiSquareDistance<T> >(index_ptr, filename);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_save_index<KL_Divergence<T> >(index_ptr, filename);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+DISTANCE_TYPE_BINDINGS(int, save_index, 
+        SINGLE_ARG(flann_index_t index_ptr, char* filename), 
+        SINGLE_ARG(index_ptr, filename))
+//template<typename T>
+//int _flann_save_index(flann_index_t index_ptr, char* filename)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_save_index<L2<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_save_index<L1<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_save_index<MinkowskiDistance<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_save_index<HistIntersectionDistance<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_save_index<HellingerDistance<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_save_index<ChiSquareDistance<T> >(index_ptr, filename);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_save_index<KL_Divergence<T> >(index_ptr, filename);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 int flann_save_index(flann_index_t index_ptr, char* filename)
 {
@@ -651,6 +901,7 @@ template<typename Distance>
 flann_index_t __flann_load_index(char* filename, typename Distance::ElementType* dataset, int rows, int cols,
                                  Distance d = Distance())
 {
+    Logger::debug("[flann.cpp] __flann_load_index\n");
     try {
         Index<Distance>* index = new Index<Distance>(Matrix<typename Distance::ElementType>(dataset,rows,cols), SavedIndexParams(filename), d);
         return index;
@@ -661,35 +912,38 @@ flann_index_t __flann_load_index(char* filename, typename Distance::ElementType*
     }
 }
 
-template<typename T>
-flann_index_t _flann_load_index(char* filename, T* dataset, int rows, int cols)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_load_index<L2<T> >(filename, dataset, rows, cols);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_load_index<L1<T> >(filename, dataset, rows, cols);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_load_index<MinkowskiDistance<T> >(filename, dataset, rows, cols, MinkowskiDistance<T>(flann_distance_order));
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_load_index<HistIntersectionDistance<T> >(filename, dataset, rows, cols);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_load_index<HellingerDistance<T> >(filename, dataset, rows, cols);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_load_index<ChiSquareDistance<T> >(filename, dataset, rows, cols);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_load_index<KL_Divergence<T> >(filename, dataset, rows, cols);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return NULL;
-    }
-}
+DISTANCE_TYPE_BINDINGS(flann_index_t, load_index, 
+        SINGLE_ARG(char* filename, T* dataset, int rows, int cols), 
+        SINGLE_ARG(filename, dataset, rows, cols))
+//template<typename T>
+//flann_index_t _flann_load_index(char* filename, T* dataset, int rows, int cols)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_load_index<L2<T> >(filename, dataset, rows, cols);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_load_index<L1<T> >(filename, dataset, rows, cols);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_load_index<MinkowskiDistance<T> >(filename, dataset, rows, cols, MinkowskiDistance<T>(flann_distance_order));
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_load_index<HistIntersectionDistance<T> >(filename, dataset, rows, cols);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_load_index<HellingerDistance<T> >(filename, dataset, rows, cols);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_load_index<ChiSquareDistance<T> >(filename, dataset, rows, cols);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_load_index<KL_Divergence<T> >(filename, dataset, rows, cols);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return NULL;
+//    }
+//}
 
 
 flann_index_t flann_load_index(char* filename, float* dataset, int rows, int cols)
@@ -723,6 +977,7 @@ template<typename Distance>
 int __flann_find_nearest_neighbors(typename Distance::ElementType* dataset,  int rows, int cols, typename Distance::ElementType* testset, int tcount,
                                    int* result, typename Distance::ResultType* dists, int nn, FLANNParameters* flann_params, Distance d = Distance())
 {
+    Logger::debug("[flann.cpp] __flann_find_nearest_neighbors\n");
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
     try {
@@ -748,36 +1003,41 @@ int __flann_find_nearest_neighbors(typename Distance::ElementType* dataset,  int
     return -1;
 }
 
-template<typename T, typename R>
-int _flann_find_nearest_neighbors(T* dataset,  int rows, int cols, T* testset, int tcount,
-                                  int* result, R* dists, int nn, FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_find_nearest_neighbors<L2<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_find_nearest_neighbors<L1<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_find_nearest_neighbors<MinkowskiDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params, MinkowskiDistance<T>(flann_distance_order));
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_find_nearest_neighbors<HistIntersectionDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_find_nearest_neighbors<HellingerDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_find_nearest_neighbors<ChiSquareDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_find_nearest_neighbors<KL_Divergence<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+// FIXME; MinkowskiDistance
+DISTANCE_TYPE_BINDINGS2(int, find_nearest_neighbors, 
+    SINGLE_ARG(T* dataset,  int rows, int cols, T* testset, int tcount, int* result, R* dists, int nn, FLANNParameters* flann_params), 
+    SINGLE_ARG(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params))
+
+//template<typename T, typename R>
+//int _flann_find_nearest_neighbors(T* dataset,  int rows, int cols, T* testset, int tcount,
+//                                  int* result, R* dists, int nn, FLANNParameters* flann_params)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_find_nearest_neighbors<L2<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_find_nearest_neighbors<L1<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_find_nearest_neighbors<MinkowskiDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params, MinkowskiDistance<T>(flann_distance_order));
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_find_nearest_neighbors<HistIntersectionDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_find_nearest_neighbors<HellingerDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_find_nearest_neighbors<ChiSquareDistance<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_find_nearest_neighbors<KL_Divergence<T> >(dataset, rows, cols, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 int flann_find_nearest_neighbors(float* dataset,  int rows, int cols, float* testset, int tcount, int* result, float* dists, int nn, FLANNParameters* flann_params)
 {
@@ -809,6 +1069,7 @@ template<typename Distance>
 int __flann_find_nearest_neighbors_index(flann_index_t index_ptr, typename Distance::ElementType* testset, int tcount,
                                          int* result, typename Distance::ResultType* dists, int nn, FLANNParameters* flann_params)
 {
+    Logger::debug("[flann.cpp] __flann_find_nearest_neighbors_index\n");
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
 
@@ -837,36 +1098,39 @@ int __flann_find_nearest_neighbors_index(flann_index_t index_ptr, typename Dista
     return -1;
 }
 
-template<typename T, typename R>
-int _flann_find_nearest_neighbors_index(flann_index_t index_ptr, T* testset, int tcount,
-                                        int* result, R* dists, int nn, FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_find_nearest_neighbors_index<L2<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_find_nearest_neighbors_index<L1<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_find_nearest_neighbors_index<MinkowskiDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_find_nearest_neighbors_index<HistIntersectionDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_find_nearest_neighbors_index<HellingerDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_find_nearest_neighbors_index<ChiSquareDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_find_nearest_neighbors_index<KL_Divergence<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+DISTANCE_TYPE_BINDINGS2(int, find_nearest_neighbors_index, 
+    SINGLE_ARG(flann_index_t index_ptr, T* testset, int tcount, int* result, R* dists, int nn, FLANNParameters* flann_params), 
+    SINGLE_ARG(index_ptr, testset, tcount, result, dists, nn, flann_params))
+//template<typename T, typename R>
+//int _flann_find_nearest_neighbors_index(flann_index_t index_ptr, T* testset, int tcount,
+//                                        int* result, R* dists, int nn, FLANNParameters* flann_params)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_find_nearest_neighbors_index<L2<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_find_nearest_neighbors_index<L1<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_find_nearest_neighbors_index<MinkowskiDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_find_nearest_neighbors_index<HistIntersectionDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_find_nearest_neighbors_index<HellingerDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_find_nearest_neighbors_index<ChiSquareDistance<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_find_nearest_neighbors_index<KL_Divergence<T> >(index_ptr, testset, tcount, result, dists, nn, flann_params);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 
 int flann_find_nearest_neighbors_index(flann_index_t index_ptr, float* testset, int tcount, int* result, float* dists, int nn, FLANNParameters* flann_params)
@@ -904,6 +1168,7 @@ int __flann_radius_search(flann_index_t index_ptr,
                           float radius,
                           FLANNParameters* flann_params)
 {
+    Logger::debug("[flann.cpp] __flann_radius_search\n");
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
 
@@ -930,41 +1195,45 @@ int __flann_radius_search(flann_index_t index_ptr,
     }
 }
 
-template<typename T, typename R>
-int _flann_radius_search(flann_index_t index_ptr,
-                         T* query,
-                         int* indices,
-                         R* dists,
-                         int max_nn,
-                         float radius,
-                         FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_radius_search<L2<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_radius_search<L1<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_radius_search<MinkowskiDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_radius_search<HistIntersectionDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_radius_search<HellingerDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_radius_search<ChiSquareDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_radius_search<KL_Divergence<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+DISTANCE_TYPE_BINDINGS2(int, radius_search, 
+    SINGLE_ARG(flann_index_t index_ptr, T* query, int* indices, R* dists, int max_nn, float radius, FLANNParameters* flann_params), 
+    SINGLE_ARG(index_ptr, query, indices, dists, max_nn, radius, flann_params))
+
+//template<typename T, typename R>
+//int _flann_radius_search(flann_index_t index_ptr,
+//                         T* query,
+//                         int* indices,
+//                         R* dists,
+//                         int max_nn,
+//                         float radius,
+//                         FLANNParameters* flann_params)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_radius_search<L2<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_radius_search<L1<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_radius_search<MinkowskiDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_radius_search<HistIntersectionDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_radius_search<HellingerDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_radius_search<ChiSquareDistance<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_radius_search<KL_Divergence<T> >(index_ptr, query, indices, dists, max_nn, radius, flann_params);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 int flann_radius_search(flann_index_t index_ptr,
                         float* query,
@@ -1025,6 +1294,7 @@ int flann_radius_search_int(flann_index_t index_ptr,
 template<typename Distance>
 int __flann_free_index(flann_index_t index_ptr, FLANNParameters* flann_params)
 {
+    Logger::debug("[flann.cpp] __flann_free_index\n");
     try {
         init_flann_parameters(flann_params);
         if (index_ptr==NULL) {
@@ -1041,35 +1311,38 @@ int __flann_free_index(flann_index_t index_ptr, FLANNParameters* flann_params)
     }
 }
 
-template<typename T>
-int _flann_free_index(flann_index_t index_ptr, FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_free_index<L2<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_free_index<L1<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_free_index<MinkowskiDistance<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_free_index<HistIntersectionDistance<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_free_index<HellingerDistance<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_free_index<ChiSquareDistance<T> >(index_ptr, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_free_index<KL_Divergence<T> >(index_ptr, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+DISTANCE_TYPE_BINDINGS(int, free_index, 
+    SINGLE_ARG(flann_index_t index_ptr, FLANNParameters* flann_params), 
+    SINGLE_ARG(index_ptr, flann_params))
+//template<typename T>
+//int _flann_free_index(flann_index_t index_ptr, FLANNParameters* flann_params)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_free_index<L2<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_free_index<L1<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_free_index<MinkowskiDistance<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_free_index<HistIntersectionDistance<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_free_index<HellingerDistance<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_free_index<ChiSquareDistance<T> >(index_ptr, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_free_index<KL_Divergence<T> >(index_ptr, flann_params);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 int flann_free_index(flann_index_t index_ptr, FLANNParameters* flann_params)
 {
@@ -1101,6 +1374,7 @@ template<typename Distance>
 int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int rows, int cols, int clusters,
                                     typename Distance::ResultType* result, FLANNParameters* flann_params, Distance d = Distance())
 {
+    Logger::debug("[flann.cpp] __flann_compute_cluster_centers\n");
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
 
@@ -1121,35 +1395,38 @@ int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int
 }
 
 
-template<typename T, typename R>
-int _flann_compute_cluster_centers(T* dataset, int rows, int cols, int clusters, R* result, FLANNParameters* flann_params)
-{
-    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_compute_cluster_centers<L2<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_compute_cluster_centers<L1<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_compute_cluster_centers<MinkowskiDistance<T> >(dataset, rows, cols, clusters, result, flann_params, MinkowskiDistance<T>(flann_distance_order));
-    }
-    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_compute_cluster_centers<HistIntersectionDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_compute_cluster_centers<HellingerDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_compute_cluster_centers<ChiSquareDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_compute_cluster_centers<KL_Divergence<T> >(dataset, rows, cols, clusters, result, flann_params);
-    }
-    else {
-        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
-        return -1;
-    }
-}
+DISTANCE_TYPE_BINDINGS2(int, compute_cluster_centers, 
+    SINGLE_ARG(T* dataset, int rows, int cols, int clusters, R* result, FLANNParameters* flann_params), 
+    SINGLE_ARG(dataset, rows, cols, clusters, result, flann_params))
+//template<typename T, typename R>
+//int _flann_compute_cluster_centers(T* dataset, int rows, int cols, int clusters, R* result, FLANNParameters* flann_params)
+//{
+//    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+//        return __flann_compute_cluster_centers<L2<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+//        return __flann_compute_cluster_centers<L1<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+//        return __flann_compute_cluster_centers<MinkowskiDistance<T> >(dataset, rows, cols, clusters, result, flann_params, MinkowskiDistance<T>(flann_distance_order));
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+//        return __flann_compute_cluster_centers<HistIntersectionDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+//        return __flann_compute_cluster_centers<HellingerDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+//        return __flann_compute_cluster_centers<ChiSquareDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+//        return __flann_compute_cluster_centers<KL_Divergence<T> >(dataset, rows, cols, clusters, result, flann_params);
+//    }
+//    else {
+//        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+//        return -1;
+//    }
+//}
 
 int flann_compute_cluster_centers(float* dataset, int rows, int cols, int clusters, float* result, FLANNParameters* flann_params)
 {

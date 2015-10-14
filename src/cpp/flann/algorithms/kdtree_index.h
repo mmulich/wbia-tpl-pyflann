@@ -228,6 +228,7 @@ public:
      */
     void findNeighbors(ResultSet<DistanceType>& result, const ElementType* vec, const SearchParams& searchParams) const
     {
+        //Logger::debug("[KDTree] findNeighbors()\n");
         int maxChecks = searchParams.checks;
         float epsError = 1+searchParams.eps;
 
@@ -256,6 +257,7 @@ protected:
      */
     void buildIndexImpl()
     {
+        Logger::debug("[KDTree] buildIndexImpl()\n");
         // Create a permutable array of indices to the input vectors.
     	std::vector<int> ind(size_);
         for (size_t i = 0; i < size_; ++i) {

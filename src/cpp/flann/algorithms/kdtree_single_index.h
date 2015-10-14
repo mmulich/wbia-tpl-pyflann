@@ -142,6 +142,7 @@ public:
 
     void addPoints(const Matrix<ElementType>& points, float rebuild_threshold = 2)
     {
+        Logger::debug("[KDTreeSingle] addPoints()\n");
         assert(points.cols==veclen_);
         extendDataset(points);
         buildIndex();
