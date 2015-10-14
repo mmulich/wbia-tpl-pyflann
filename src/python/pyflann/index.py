@@ -269,9 +269,13 @@ class FLANN(object):
 
         Returns: void
         """
-        for id_ in id_list:
-            self.remove_point(id_)
-            #flann.remove_point[self.__curindex_type](self.__curindex, id_)
+        id_list = np.array(id_list, dtype=np.int32)
+        num = len(id_list)
+        flann.remove_points[self.__curindex_type](self.__curindex, id_list, num)
+        self.__removed_ids.extend(id_list)
+        #for id_ in id_list:
+        #    self.remove_point(id_)
+        #    #flann.remove_point[self.__curindex_type](self.__curindex, id_)
 
     def save_index(self, filename):
         """

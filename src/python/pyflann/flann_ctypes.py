@@ -280,6 +280,18 @@ flann.remove_point[%(numpy)s] = flannlib.flann_remove_point_%(C)s
 """)
 
 
+flann.remove_points = {}
+define_functions(r"""
+flannlib.flann_remove_points_%(C)s.restype = None
+flannlib.flann_remove_points_%(C)s.argtypes = [
+        FLANN_INDEX,  # index_ptr
+        ndpointer(int32, ndim = 1, flags='aligned, c_contiguous'),  # id_list
+        c_int,  # num
+]
+flann.remove_points[%(numpy)s] = flannlib.flann_remove_points_%(C)s
+""")
+
+
 flann.save_index = {}
 define_functions(r"""
 flannlib.flann_save_index_%(C)s.restype = None

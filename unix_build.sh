@@ -4,6 +4,8 @@
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
 
+export FAILCMD='{ echo "FAILED FLANN BUILD" ; exit 1; }'
+
 #rm -rf build
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
 mkdir build
@@ -34,6 +36,7 @@ cmake -G "Unix Makefiles" \
     -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE \
     -DBUILD_PYTHON_BINDINGS=On \
     -DBUILD_MATLAB_BINDINGS=Off \
+    -DCMAKE_INSTALL_PREFIX=$LOCAL_PREFIX \
     -DLATEX_OUTPUT_PATH=. \
     -DBUILD_CUDA_LIB=Off\
     ..
@@ -52,14 +55,12 @@ cmake -G "Unix Makefiles" \
     #-DCUDA_VERBOSE_BUILD=On\
     #-DCUDA_NVCC_FLAGS=-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_20,code=sm_21 
 
-make -j$NCPUS 
-make -j$NCPUS || { echo "FAILED MAKE" ; exit 1; }
-
-sudo make install || { echo "FAILED MAKE INSTALL" ; exit 1; }
+make -j$NCPUS || $FAILCMD
+$_SUDO make install || $FAILCMD
 
 # setup to develop
 cd ../src/python
-sudo python ../../build/src/python/setup.py develop
+$_SUDO python ../../build/src/python/setup.py develop
 
 #python -c "import pyflann; print(pyflann)"
 

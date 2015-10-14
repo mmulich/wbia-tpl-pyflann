@@ -141,12 +141,16 @@ public:
     
     void addPoints(const Matrix<ElementType>& points, float rebuild_threshold = 2)
     {
+        Logger::debug("[KDTree] addPoints()\n");
         assert(points.cols==veclen_);
 
         size_t old_size = size_;
+        Logger::debug("[KDTree] * old_size = %d\n", old_size);
+
         extendDataset(points);
         
         if (rebuild_threshold>1 && size_at_build_*rebuild_threshold<size_) {
+            Logger::debug("[KDTree] hit rebuild threshold\n");
             buildIndex();
         }
         else {

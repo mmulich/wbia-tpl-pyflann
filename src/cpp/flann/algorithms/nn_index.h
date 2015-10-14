@@ -39,6 +39,7 @@
 #include "flann/util/result_set.h"
 #include "flann/util/dynamic_bitset.h"
 #include "flann/util/saving.h"
+#include "flann/util/logger.h"
 
 namespace flann
 {
@@ -176,6 +177,16 @@ public:
     		removed_points_.set(point_index);
     		removed_count_++;
     	}
+    }
+
+    virtual void removePoints(int* id_list, int num)
+    {
+        Logger::debug("[NNIndex] removePoints(num=%d)\n", num);
+        for (int i=0; i < num; i++)
+        {
+            size_t point_id = id_list[i];
+            this->removePoint(point_id);
+        }
     }
 
 
@@ -762,7 +773,10 @@ protected:
 
     void extendDataset(const Matrix<ElementType>& new_points)
     {
+        Logger::debug("[NNIndex] extendDataset()\n");
     	size_t new_size = size_ + new_points.rows;
+        Logger::debug("[NNIndex] * new_size = %d\n", new_size);
+        Logger::debug("[NNIndex] * this->removed_ = %d\n", removed_);
     	if (removed_) {
     		removed_points_.resize(new_size);
     		ids_.resize(new_size);
@@ -781,6 +795,7 @@ protected:
 
     void cleanRemovedPoints()
     {
+        Logger::debug("[NNIndex] cleanRemovedPoints(), removed_=%d\n", removed_);
     	if (!removed_) return;
 
     	size_t last_idx = 0;

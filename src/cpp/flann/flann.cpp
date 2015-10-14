@@ -497,8 +497,79 @@ void flann_remove_point_byte(flann_index_t index_ptr, int id_)
 {
     _flann_remove_point<unsigned char>(index_ptr, id_);
 }
-// {binding_name} END
-// 
+// remove_point END
+
+
+// remove_points BEGIN
+template<typename Distance>
+void __flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
+{
+
+    //typedef typename Distance::ElementType ElementType;
+    try {
+        if (index_ptr==NULL) {
+            throw FLANNException("Invalid index");
+        }
+        Index<Distance>* index = (Index<Distance>*)index_ptr;
+        index->removePoints(id_list, num);
+        return;
+    }
+    catch (std::runtime_error& e) {
+        Logger::error("Caught exception: %s\n",e.what());
+        return;
+    }
+}
+
+template<typename T>
+void _flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
+{
+    if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
+         return __flann_remove_points<L2<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
+         return __flann_remove_points<L1<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
+         return __flann_remove_points<MinkowskiDistance<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
+         return __flann_remove_points<HistIntersectionDistance<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_HELLINGER) {
+         return __flann_remove_points<HellingerDistance<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
+         return __flann_remove_points<ChiSquareDistance<T> >(index_ptr, id_list, num);
+    }
+    else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
+         return __flann_remove_points<KL_Divergence<T> >(index_ptr, id_list, num);
+    }
+    else {
+        Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
+        throw 0;
+    }
+}
+void flann_remove_points(flann_index_t index_ptr, int* id_list, int num)
+{
+    _flann_remove_points<float>(index_ptr, id_list, num);
+}
+void flann_remove_points_float(flann_index_t index_ptr, int* id_list, int num)
+{
+    _flann_remove_points<float>(index_ptr, id_list, num);
+}
+void flann_remove_points_double(flann_index_t index_ptr, int* id_list, int num)
+{
+    _flann_remove_points<double>(index_ptr, id_list, num);
+}
+void flann_remove_points_int(flann_index_t index_ptr, int* id_list, int num)
+{
+    _flann_remove_points<int>(index_ptr, id_list, num);
+}
+void flann_remove_points_byte(flann_index_t index_ptr, int* id_list, int num)
+{
+    _flann_remove_points<unsigned char>(index_ptr, id_list, num);
+}
+// remove_points END
 
 
 template<typename Distance>

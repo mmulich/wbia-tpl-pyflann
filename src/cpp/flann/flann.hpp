@@ -162,6 +162,8 @@ public:
 
     void addPoints(const Matrix<ElementType>& points, float rebuild_threshold = 2)
     {
+        Logger::debug("[FLANN] addPoints(points.shape=(%d, %d)).\n", 
+                points.rows, points.cols);
         nnIndex_->addPoints(points, rebuild_threshold);
     }
 
@@ -171,7 +173,20 @@ public:
      */
     void removePoint(size_t point_id)
     {
+        //Logger::debug("[FLANN.removePoint].\n");
     	nnIndex_->removePoint(point_id);
+    }
+
+
+    /**
+     * Remove multiple points from the index
+     * @param id_list, array of indices to be removed
+     * @param num, number of indices to be removed
+     */
+    void removePoints(int* id_list, int num)
+    {
+        Logger::debug("[FLANN] removePoints(num=%d)\n", num);
+    	nnIndex_->removePoints(id_list, num);
     }
 
     /**
@@ -190,15 +205,15 @@ public:
      */
     void save(std::string filename)
     {
-        Logger::debug("[FLANN.save_index()] Enter.\n");
-        Logger::debug("[FLANN.save_index()] filename=%s.\n", filename.c_str());
+        Logger::debug("[FLANN] save_index()\n");
+        Logger::debug("[FLANN] * filename=%s.\n", filename.c_str());
         FILE* fout = fopen(filename.c_str(), "wb");
         if (fout == NULL) {
             throw FLANNException("Cannot open file");
         }
         nnIndex_->saveIndex(fout);
         fclose(fout);
-        Logger::debug("[FLANN.save_index()] Exit.\n");
+        Logger::debug("[FLANN] finished save\n");
     }
 
     /**
@@ -387,7 +402,8 @@ public:
 private:
     IndexType* load_saved_index(const Matrix<ElementType>& dataset, const std::string& filename, Distance distance)
     {
-        Logger::debug("[FLANN.load_saved_index()] Enter.\n");
+        Logger::debug("[FLANN] load_saved_index().\n");
+        Logger::debug("[FLANN] * filename=%s.\n", filename.c_str());
         FILE* fin = fopen(filename.c_str(), "rb");
         if (fin == NULL) {
             return NULL;
@@ -403,7 +419,7 @@ private:
         rewind(fin);
         nnIndex->loadIndex(fin);
         fclose(fin);
-        Logger::debug("[FLANN.load_saved_index()] Exit.\n");
+        Logger::debug("[FLANN] finished load.\n");
         return nnIndex;
     }
 

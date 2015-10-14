@@ -87,7 +87,7 @@ public:
      */
     static void setLevel(int level) { 
         instance().logLevel = level; 
-        instance().log(5, "[FLANN] log.setLevel(%d)\a", level);
+        instance().log(5, "[FLANN] log.setLevel(%d)\n", level);
     }
 
     /**

@@ -229,6 +229,28 @@ FLANN_EXPORT void flann_remove_point_byte(flann_index_t index_ptr, int id_);
 
 
 /**
+    Removes a point from the index
+
+    Params:
+        index_id The index that should be modified
+        id_list = list of point ids to be removed
+        num = number of points to be removed
+
+    Returns: void
+*/
+
+FLANN_EXPORT void flann_remove_points(flann_index_t index_ptr, int* id_list, int num);
+
+FLANN_EXPORT void flann_remove_points_float(flann_index_t index_ptr, int* id_list, int num);
+
+FLANN_EXPORT void flann_remove_points_double(flann_index_t index_ptr, int* id_list, int num);
+
+FLANN_EXPORT void flann_remove_points_int(flann_index_t index_ptr, int* id_list, int num);
+
+FLANN_EXPORT void flann_remove_points_byte(flann_index_t index_ptr, int* id_list, int num);
+
+
+/**
  * Saves the index to a file. Only the index is saved into the file, the dataset corresponding to the index is not saved.
  *
  * @param index_id The index that should be saved
