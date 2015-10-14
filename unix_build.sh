@@ -1,13 +1,12 @@
 #!/bin/bash
 #REPODIR=$(cd $(dirname $0) ; pwd)
 #cd $REPODIR/flann
+#sudo apt-get install libhdf5-serial-1.8.4
+#libhdf5-openmpi-dev
 
 #rm -rf build
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
 mkdir build
-
-#sudo apt-get install libhdf5-serial-1.8.4
-#libhdf5-openmpi-dev
 
 cd build
 
@@ -16,22 +15,18 @@ cd build
 # Grab correct python executable
 export PYEXE=$(which python2.7)
 export PYTHON_EXECUTABLE=$($PYEXE -c "import sys; print(sys.executable)")
-# This gives /usr for python2.7, should give /usr/local?
-#export CMAKE_INSTALL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")
-#export CMAKE_INSTALL_PREFIX=/usr/local
-echo "CMAKE_INSTALL_PREFIX     = $CMAKE_INSTALL_PREFIX"
-echo "PYTHON_EXECUTABLE        = $PYTHON_EXECUTABLE"
-echo "PYEXE        = $PYEXE"
+if [[ "$VIRTUAL_ENV" == ""  ]]; then
+    export LOCAL_PREFIX=/usr/local
+    export _SUDO="sudo"
+else
+    export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local
+    export _SUDO=""
+fi
 
-## Configure make build install
-#cmake -G "Unix Makefiles" \
-#    -DBUILD_MATLAB_BINDINGS=Off \
-#    -DCMAKE_BUILD_TYPE=Release \
-#    -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE \
-#    ..
-
-    #-DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX \
-
+echo "PYEXE              = $PYEXE"
+echo "PYTHON_EXECUTABLE  = $PYTHON_EXECUTABLE"
+echo "LOCAL_PREFIX       = $LOCAL_PREFIX"
+echo "_SUDO              = $_SUDO"
 
 # Configure make build install
 cmake -G "Unix Makefiles" \

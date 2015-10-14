@@ -116,6 +116,18 @@ class FLANN(object):
         """
         return self.__curindex_data, self.__added_data
 
+    def _get_stacked_data(self):
+        """
+        convenience function stacking all indexed data. Makes a copy
+
+        """
+        tmp = self.get_indexed_data()
+        vecs_combined = np.vstack([tmp[0]] + tmp[1])
+        return vecs_combined
+
+    def get_removed_ids(self):
+        return self.__removed_ids
+
     def used_memory_dataset(self):
         """
         Returns the amount of memory used by the dataset
@@ -258,7 +270,8 @@ class FLANN(object):
         Returns: void
         """
         for id_ in id_list:
-            flann.remove_point[self.__curindex_type](self.__curindex, id_)
+            self.remove_point(id_)
+            #flann.remove_point[self.__curindex_type](self.__curindex, id_)
 
     def save_index(self, filename):
         """
