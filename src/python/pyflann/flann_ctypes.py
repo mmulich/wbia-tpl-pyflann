@@ -163,7 +163,7 @@ def load_flann_library():
         for libname in libnames:
             try:
                 libpath = os.path.join(root_dir, libdir, libname)
-                print('Trying %s' % (libpath,))
+                #print('Trying %s' % (libpath,))
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
                 return flannlib
@@ -171,7 +171,7 @@ def load_flann_library():
                 pass
             try:
                 libpath = os.path.join(root_dir, 'build', libdir, libname)
-                print('Trying %s' % (libpath,))
+                #print('Trying %s' % (libpath,))
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
                 return flannlib
@@ -187,7 +187,7 @@ def load_flann_library():
     # a full path as a last resort
     for libname in libnames:
         try:
-            print('Trying %s' % (libname,))
+            #print('Trying %s' % (libname,))
             tried_paths.append(libname)
             flannlib = cdll[libname]
             return flannlib
