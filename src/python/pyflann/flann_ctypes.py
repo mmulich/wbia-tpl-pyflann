@@ -150,6 +150,8 @@ def load_flann_library():
 
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
+    tried_paths = []
+
     libnames = ['libflann.so']
     libdir = 'lib'
     if sys.platform == 'win32':
@@ -160,13 +162,18 @@ def load_flann_library():
     while root_dir is not None:
         for libname in libnames:
             try:
-                #print 'Trying ',os.path.join(root_dir,'lib',libname)
-                flannlib = cdll[os.path.join(root_dir, libdir, libname)]
+                libpath = os.path.join(root_dir, libdir, libname)
+                print('Trying %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
                 return flannlib
             except Exception:
                 pass
             try:
-                flannlib = cdll[os.path.join(root_dir, 'build', libdir, libname)]
+                libpath = os.path.join(root_dir, 'build', libdir, libname)
+                print('Trying %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
                 return flannlib
             except Exception:
                 pass
@@ -180,7 +187,8 @@ def load_flann_library():
     # a full path as a last resort
     for libname in libnames:
         try:
-            #print 'Trying',libname
+            print('Trying %s' % (libname,))
+            tried_paths.append(libname)
             flannlib = cdll[libname]
             return flannlib
         except:

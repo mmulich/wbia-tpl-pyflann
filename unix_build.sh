@@ -69,7 +69,8 @@ $_SUDO make install || $FAILCMD
 cd ../src/python
 $_SUDO python ../../build/src/python/setup.py develop
 
-#python -c "import pyflann; print(pyflann)"
+python -c "import pyflann; print(pyflann.__file__)"
+python -c "import pyflann; print(pyflann)"
 
 #copying pyflann/__init__.py -> build/lib.linux-x86_64-2.7/pyflann
 #copying pyflann/flann_ctypes.py -> build/lib.linux-x86_64-2.7/pyflann
