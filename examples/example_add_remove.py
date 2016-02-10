@@ -6,7 +6,7 @@ import numpy as np
 
 def get_flann_params(algorithm='kdtree', **kwargs):
     r"""
-    Returns flann params that are relvant tothe algorithm
+    Helper function that returns only params that are relvant to the algorithm
 
     Args:
         algorithm (str): (default = 'kdtree')
@@ -71,12 +71,22 @@ def dict_str(dict_):
     return '{\n    ' + ('\n    '.join(itemstr_list)) + '\n}'
 
 
-def report_list(list_, name):
-    return '    ' + name + ' = [' + ', '.join([str(r2[0]) for r2 in list_]) + ']'
+def report_list(list_, name, truncate=True):
+    if len(list_) < 50 or not truncate:
+        list_str = ', '.join([str(r2[0]) for r2 in list_])
+    else:
+        list_str1 = ', '.join([str(r2[0]) for r2 in list_[0:10]])
+        list_str2 = ', '.join([str(r2[0]) for r2 in list_[-10:]])
+        list_str = list_str1 + ' ... ' + list_str2
+    return name + ' = [' + list_str  + ']'
 
 
 def add_remove_example():
-    # Make determenistic test dataset
+    """
+    Shows examples of the add / remove point python bindings.
+    NOTE: saving an index that has had points removed may cause segaults.
+    """
+
     print('+=============================================')
     print('STARTING FLANN EXAMPLE --- ADD / REMOVE POINTS')
     print('+=============================================')
@@ -84,14 +94,16 @@ def add_remove_example():
     print('Step 1) Initialize')
     print(' * Create a test dataset and build a neighbor index')
 
+    # Make determenistic test dataset
     rng = np.random.RandomState(0)
     data_dim = 128
     num_dpts = 1000
-    num_qpts = 15
+    num_qpts = 150
     num_neighbs = 5
 
     dataset = rand_vecs(num_dpts, data_dim, rng)
     testset = rand_vecs(num_qpts, data_dim, rng)
+    testset2 = rand_vecs(num_qpts, data_dim, rng)
 
     params = get_flann_params(algorithm='kdtree', trees=4, random_seed=42)
     print('params = ' + dict_str(params))
@@ -105,7 +117,7 @@ def add_remove_example():
     result1, dists = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
     print(' * Neighbor results should be all over the place between 0 and %d' % (num_dpts,))
-    print(report_list(result1, 'result1'))
+    print('    ' + report_list(result1, 'result1'))
 
     # check memory
     prev_index_memory = flann.used_memory()
@@ -130,9 +142,10 @@ def add_remove_example():
     result2, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
     print(' * Neighbor results should be between %d and %d' % (num_dpts, num_dpts + num_qpts))
-    print(report_list(result2, 'result2'))
+    print('    ' + report_list(result2, 'result2'))
     assert np.all(result2.T[0] >= num_dpts), 'new points should be found first'
-    assert (result2.T[1] == result1.T[0]).sum() > result1.shape[0] / 2, 'most old points should be found next'
+    assert (result2.T[1] == result1.T[0]).sum() > result1.shape[0] / 2, (
+        'most old points should be found next')
 
     # Remove half of the test points
     print('------')
@@ -141,7 +154,7 @@ def add_remove_example():
         flann.remove_point(id_)
 
     result3, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
-    print(report_list(result3, 'result3'))
+    print('    ' + report_list(result3, 'result3'))
 
     print(' * Check memory usage after remove')
     print('    used memory =  after remove_point')
@@ -149,8 +162,6 @@ def add_remove_example():
     print('     data       =  %d bytes' % (flann.used_memory_dataset(),))
     print('Memory does not change because of lazy deletion.')
     print('The indicies of the other datapoints also does not change')
-
-    testset2 = rand_vecs(num_qpts, data_dim, rng)
 
     print('------')
     print('Step 4) Add another set of new points to the input')
@@ -161,13 +172,13 @@ def add_remove_example():
     print(' * Results should be greater than %d' % (num_dpts + num_qpts,))
     result4, _ = flann.nn_index(testset2, num_neighbs, checks=params['checks'])
     assert np.all(result4.T[0] >= num_dpts + num_qpts), 'new add points after delete failed'
-    print(report_list(result4, 'result4'))
+    print('    ' + report_list(result4, 'result4'))
 
     print(' * Check to make sure old points still work')
     print(' * Results should be less than %d' % (num_dpts + num_qpts,))
     result5, _ = flann.nn_index(testset[1::2], num_neighbs, checks=params['checks'])
     assert np.all(result5.T[0] <= num_dpts + num_qpts), 'odd test points should not have changed'
-    print(report_list(result5, 'result5'))
+    print('    ' + report_list(result5, 'result5'))
 
     print(' * Final memory usage')
     print('    used memory =  after remove_point and add')
@@ -178,7 +189,7 @@ def add_remove_example():
 if __name__ == '__main__':
     """
     CommandLine:
-        python ~/code/flann/test/test_add_remove_example.py
-        python test/test_add_remove_example.py
+        python ~/code/flann/examples/example_add_remove.py
+        python examples/example_add_remove.py
     """
     add_remove_example()
