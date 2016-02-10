@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pyflann
-import sys
 import numpy as np
 import unittest
 
