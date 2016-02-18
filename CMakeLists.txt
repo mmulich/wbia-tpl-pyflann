@@ -12,6 +12,22 @@ set(FLANN_VERSION 1.8.4)
 DISSECT_VERSION()
 GET_OS_INFO()
 
+# Get git branch / hash info
+# http://xit0.org/2013/04/cmake-use-git-branch-and-commit-details-in-project/
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
+add_definitions("-DGIT_BRANCH=${GIT_BRANCH}")
 
 # detect if using the Clang compiler
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")

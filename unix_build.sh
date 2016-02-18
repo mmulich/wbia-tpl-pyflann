@@ -98,8 +98,6 @@ flann_setuptools_install()
     #../../build/src/python/setup.py
     python ../../build/src/python/setup.py develop
     sudo python ../../build/src/python/setup.py develop
-
-    sudo python ../../build/src/python/setup.py develop --uninstall
 }
 #setupinstall_flann()
 #{
@@ -112,13 +110,15 @@ flann_setuptools_install()
 
 uninstall_flann()
 {
+    cd $CODE_DIR/flann/src/python
+    sudo python ../../build/src/python/setup.py develop --uninstall
+
     pip list | grep flann
     python -c "import pyflann; print(pyflann.__file__)"
     python -c "import pyflann, os.path; print(os.path.dirname(pyflann.__file__))"
     sudo rm -rf /home/joncrall/venv/local/lib/python2.7/site-packages/pyflann
     python -c "import pyflann; print(pyflann.FLANN.add_points)"
     python -c "import pyflann; print(pyflann.__tmp_version__)"
-
     ls -al /home/joncrall/venv/local/lib/python2.7/site-packages/pyflann/lib
 
     # The add remove/error branch info 
