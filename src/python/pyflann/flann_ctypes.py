@@ -136,7 +136,7 @@ class FLANNParameters(CustomStructure):
     _translation_ = {
         'algorithm'     : {'linear'    : 0, 'kdtree'    : 1, 'kmeans'    : 2, 'composite' : 3, 'kdtree_single' : 4, 'hierarchical': 5, 'lsh': 6, 'saved': 254, 'autotuned' : 255, 'default'   : 1},
         'centers_init'  : {'random'    : 0, 'gonzales'  : 1, 'kmeanspp'  : 2, 'default'   : 0},
-        'log_level'     : {'none'      : 0, 'fatal'     : 1, 'error'     : 2, 'warning'   : 3, 'info'      : 4, 'default'   : 2}
+        'log_level'     : {'none'      : 0, 'fatal'     : 1, 'error'     : 2, 'warning'   : 3, 'info'      : 4, 'default'   : 2, 'debug': 5}
     }
 
 
@@ -150,6 +150,8 @@ def load_flann_library():
 
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
+    tried_paths = []
+
     libnames = ['libflann.so']
     libdir = 'lib'
     if sys.platform == 'win32':
@@ -160,13 +162,18 @@ def load_flann_library():
     while root_dir is not None:
         for libname in libnames:
             try:
-                #print 'Trying ',os.path.join(root_dir,'lib',libname)
-                flannlib = cdll[os.path.join(root_dir, libdir, libname)]
+                libpath = os.path.join(root_dir, libdir, libname)
+                #print('Trying %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
                 return flannlib
             except Exception:
                 pass
             try:
-                flannlib = cdll[os.path.join(root_dir, 'build', libdir, libname)]
+                libpath = os.path.join(root_dir, 'build', libdir, libname)
+                #print('Trying %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
                 return flannlib
             except Exception:
                 pass
@@ -180,7 +187,8 @@ def load_flann_library():
     # a full path as a last resort
     for libname in libnames:
         try:
-            #print 'Trying',libname
+            #print('Trying %s' % (libname,))
+            tried_paths.append(libname)
             flannlib = cdll[libname]
             return flannlib
         except:
@@ -217,9 +225,21 @@ type_mappings = ( ('float', 'float32'),
                   ('int', 'int32') )
 
 
-def define_functions(str):
-    for type in type_mappings:
-        eval(compile(str % {'C': type[0], 'numpy': type[1]}, '<string>', 'exec'))
+def define_functions(fmtstr):
+    try:
+        for type_ in type_mappings:
+            source = fmtstr % {'C': type_[0], 'numpy': type_[1]}
+            code = compile(source, '<string>', 'exec')
+            eval(code)
+    except AttributeError:
+        print('+=========')
+        print('Error compling code')
+        print('+ format string ---------')
+        print(fmtstr)
+        print('+ failing instance ---------')
+        print(source)
+        print('L_________')
+        raise
 
 flann.build_index = {}
 define_functions(r"""
