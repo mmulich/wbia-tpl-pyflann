@@ -39,6 +39,7 @@
 #include "flann/util/result_set.h"
 #include "flann/util/dynamic_bitset.h"
 #include "flann/util/saving.h"
+#include "flann/util/logger.h"
 
 namespace flann
 {
@@ -79,11 +80,13 @@ public:
 	NNIndex(Distance d) : distance_(d), last_id_(0), size_(0), size_at_build_(0), veclen_(0),
 			removed_(false), removed_count_(0), data_ptr_(NULL)
 	{
+        Logger::debug("[NNIndex] constructor(0)\n");
 	}
 
 	NNIndex(const IndexParams& params, Distance d) : distance_(d), last_id_(0), size_(0), size_at_build_(0), veclen_(0),
 			index_params_(params), removed_(false), removed_count_(0), data_ptr_(NULL)
 	{
+        Logger::debug("[NNIndex] constructor(1)\n");
 	}
 
 	NNIndex(const NNIndex& other) :
@@ -100,6 +103,7 @@ public:
 		points_(other.points_),
 		data_ptr_(NULL)
 	{
+        Logger::debug("[NNIndex] copy constructor()\n");
 		if (other.data_ptr_) {
 			data_ptr_ = new ElementType[size_*veclen_];
 			std::copy(other.data_ptr_, other.data_ptr_+size_*veclen_, data_ptr_);
@@ -111,6 +115,8 @@ public:
 
 	virtual ~NNIndex()
 	{
+        Logger::debug("[NNIndex] destructor()\n");
+        Logger::debug("[NNIndex] * data_ptr_=%p\n", data_ptr_);
 		if (data_ptr_) {
 			delete[] data_ptr_;
 		}
@@ -124,6 +130,7 @@ public:
 	 */
 	virtual void buildIndex()
 	{
+        Logger::debug("[NNIndex] buildIndex()\n");
     	freeIndex();
     	cleanRemovedPoints();
 
@@ -140,6 +147,7 @@ public:
 	 */
     virtual void buildIndex(const Matrix<ElementType>& dataset)
     {
+        Logger::debug("[NNIndex] buildIndex(dataset.shape=(%d, %d))\n", dataset.rows, dataset.cols);
         setDataset(dataset);
         this->buildIndex();
     }
@@ -161,6 +169,9 @@ public:
     virtual void removePoint(size_t id)
     {
     	if (!removed_) {
+            Logger::debug("[NNIndex] removePoint() removed_=False\n");
+            Logger::debug("[NNIndex] * size_=%d\n", size_);
+            Logger::debug("[NNIndex] * last_id_=%d\n", last_id_);
     		ids_.resize(size_);
     		for (size_t i=0;i<size_;++i) {
     			ids_[i] = i;
@@ -176,6 +187,16 @@ public:
     		removed_points_.set(point_index);
     		removed_count_++;
     	}
+    }
+
+    virtual void removePoints(int* id_list, int num)
+    {
+        Logger::debug("[NNIndex] removePoints(num=%d)\n", num);
+        for (int i=0; i < num; i++)
+        {
+            size_t point_id = id_list[i];
+            this->removePoint(point_id);
+        }
     }
 
 
@@ -222,9 +243,13 @@ public:
     }
 
 
+    /**
+     * Loads and saves data in the neighbor index into or from an Archive.
+     */
     template<typename Archive>
     void serialize(Archive& ar)
     {
+        Logger::debug("[NNIndex] serialize()\n");
     	IndexHeader header;
 
     	if (Archive::is_saving::value) {
@@ -264,6 +289,11 @@ public:
     	}
     	ar & save_dataset;
 
+        Logger::debug("[NNIndex] * save_dataset = %d\n", save_dataset);
+        Logger::debug("[NNIndex] * size_ = %d\n", size_);
+        Logger::debug("[NNIndex] * veclen_ = %d\n", veclen_);
+        Logger::debug("[NNIndex] * size_at_build_ = %d\n", size_at_build_);
+
     	if (save_dataset) {
     		if (Archive::is_loading::value) {
     			if (data_ptr_) {
@@ -280,7 +310,9 @@ public:
     		}
     	} else {
     		if (points_.size()!=size_) {
-    			throw FLANNException("Saved index does not contain the dataset and no dataset was provided.");
+    			Logger::warn("[NNIndex] * size_=%d\n", size_);
+    			Logger::warn("[NNIndex] * points_.size()=%d\n", points_.size());
+    			throw FLANNException("Saved index does not contain the dataset provided. The dataset size does not match.");
     		}
     	}
 
@@ -291,6 +323,10 @@ public:
     		ar & removed_points_;
     	}
     	ar & removed_count_;
+
+        Logger::debug("[NNIndex] * last_id_ = %d\n", last_id_);
+        Logger::debug("[NNIndex] * removed_ = %d\n", removed_);
+        Logger::debug("[NNIndex] * removed_count_ = %d\n", removed_count_);
     }
 
 
@@ -308,6 +344,10 @@ public:
     		size_t knn,
     		const SearchParams& params) const
     {
+        Logger::debug("[NNIndex] knnSearch(0)\n");
+        Logger::debug("[NNIndex] * params.cores=%d\n", params.cores);
+        Logger::debug("[NNIndex] * knn=%d\n", knn);
+        Logger::debug("[NNIndex] * queries.rows=%d\n", queries.rows);
     	assert(queries.cols == veclen());
     	assert(indices.rows >= queries.rows);
     	assert(dists.rows >= queries.rows);
@@ -371,6 +411,7 @@ public:
                                  size_t knn,
                            const SearchParams& params) const
     {
+        Logger::debug("[NNIndex] knnSearch(1)\n");
     	flann::Matrix<size_t> indices_(new size_t[indices.rows*indices.cols], indices.rows, indices.cols);
     	int result = knnSearch(queries, indices_, dists, knn, params);
 
@@ -398,6 +439,7 @@ public:
     				size_t knn,
     				const SearchParams& params) const
     {
+        Logger::debug("[NNIndex] knnSearch(2)\n");
         assert(queries.cols == veclen());
         bool use_heap;
         if (params.use_heap==FLANN_Undefined) {
@@ -469,6 +511,7 @@ public:
                                  size_t knn,
                            const SearchParams& params) const
     {
+        Logger::debug("[NNIndex] knnSearch(3)\n");
     	std::vector<std::vector<size_t> > indices_;
     	int result = knnSearch(queries, indices_, dists, knn, params);
 
@@ -745,6 +788,7 @@ protected:
 
     void setDataset(const Matrix<ElementType>& dataset)
     {
+        Logger::debug("[NNIndex] * setDataset()\n");
     	size_ = dataset.rows;
     	veclen_ = dataset.cols;
     	last_id_ = 0;
@@ -762,7 +806,12 @@ protected:
 
     void extendDataset(const Matrix<ElementType>& new_points)
     {
+        Logger::debug("[NNIndex] extendDataset()\n");
     	size_t new_size = size_ + new_points.rows;
+
+        Logger::debug("[NNIndex] * new_size = %d\n", new_size);
+        Logger::debug("[NNIndex] * this->removed_ = %d\n", removed_);
+
     	if (removed_) {
     		removed_points_.resize(new_size);
     		ids_.resize(new_size);
@@ -778,10 +827,14 @@ protected:
     	size_ = new_size;
     }
 
-
     void cleanRemovedPoints()
     {
+        Logger::debug("[NNIndex] cleanRemovedPoints()\n");
+        Logger::debug("[NNIndex] * removed_ = %d\n", removed_);
+        Logger::debug("[NNIndex] * removed_count_ = %d\n", removed_count_);
     	if (!removed_) return;
+
+        Logger::debug("[NNIndex] * size_ = %d\n", size_);
 
     	size_t last_idx = 0;
     	for (size_t i=0;i<size_;++i) {
@@ -792,11 +845,15 @@ protected:
     			++last_idx;
     		}
     	}
+
+        Logger::debug("[NNIndex] * last_idx = %d\n", last_idx);
+
     	points_.resize(last_idx);
     	ids_.resize(last_idx);
     	removed_points_.resize(last_idx);
     	size_ = last_idx;
     	removed_count_ = 0;
+        Logger::debug("[NNIndex] finished cleanRemovedPoints()\n");
     }
 
     void swap(NNIndex& other)

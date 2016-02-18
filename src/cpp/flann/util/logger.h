@@ -59,6 +59,8 @@ class Logger
 
     void _setDestination(const char* name)
     {
+        // TODO: save destintion name for programmatic access
+        // this->destination_name = name
         if (name==NULL) {
             stream = stdout;
         }
@@ -68,6 +70,7 @@ class Logger
                 stream = stdout;
             }
         }
+        instance().log(5, "[logger.h] log.setDestination(%s)\n", name);
     }
 
     int _log(int level, const char* fmt, va_list arglist)
@@ -82,7 +85,10 @@ public:
      * Sets the logging level. All messages with lower priority will be ignored.
      * @param level Logging level
      */
-    static void setLevel(int level) { instance().logLevel = level; }
+    static void setLevel(int level) {
+        instance().logLevel = level;
+        instance().log(5, "[logger.h] log.setLevel(%d)\n", level);
+    }
 
     /**
      * Returns the currently set logging level.
@@ -130,6 +136,8 @@ public:
 private:
     FILE* stream;
     int logLevel;
+    //std::string destination_name;
+    //const char* destination_name; // TODO: save destination name
 };
 
 }
