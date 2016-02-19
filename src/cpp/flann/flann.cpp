@@ -1202,8 +1202,7 @@ int flann_free_index_byte(flann_index_t index_ptr, FLANNParameters* flann_params
 
 
 template <typename Distance>
-int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int rows, int cols, int clusters,
-                                    typename Distance::ResultType* result, FLANNParameters* flann_params, Distance d = Distance())
+int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int rows, int cols, int clusters, typename Distance::ResultType* result_centers, FLANNParameters* flann_params, Distance d = Distance())
 {
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
@@ -1213,7 +1212,7 @@ int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int
 
         Matrix<ElementType> inputData(dataset,rows,cols);
         KMeansIndexParams params(flann_params->branching, flann_params->iterations, flann_params->centers_init, flann_params->cb_index);
-        Matrix<DistanceType> centers(result,clusters,cols);
+        Matrix<DistanceType> centers(result_centers, clusters,cols);
         int clusterNum = hierarchicalClustering<Distance>(inputData, centers, params, d);
 
         return clusterNum;
@@ -1226,28 +1225,28 @@ int __flann_compute_cluster_centers(typename Distance::ElementType* dataset, int
 
 
 template <typename T, typename R>
-int _flann_compute_cluster_centers(T* dataset, int rows, int cols, int clusters, R* result, FLANNParameters* flann_params)
+int _flann_compute_cluster_centers(T* dataset, int rows, int cols, int clusters, R* result_centers, FLANNParameters* flann_params)
 {
     if (flann_distance_type==FLANN_DIST_EUCLIDEAN) {
-        return __flann_compute_cluster_centers<L2<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<L2<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else if (flann_distance_type==FLANN_DIST_MANHATTAN) {
-        return __flann_compute_cluster_centers<L1<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<L1<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else if (flann_distance_type==FLANN_DIST_MINKOWSKI) {
-        return __flann_compute_cluster_centers<MinkowskiDistance<T> >(dataset, rows, cols, clusters, result, flann_params, MinkowskiDistance<T>(flann_distance_order));
+        return __flann_compute_cluster_centers<MinkowskiDistance<T> >(dataset, rows, cols, clusters, result_centers, flann_params, MinkowskiDistance<T>(flann_distance_order));
     }
     else if (flann_distance_type==FLANN_DIST_HIST_INTERSECT) {
-        return __flann_compute_cluster_centers<HistIntersectionDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<HistIntersectionDistance<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else if (flann_distance_type==FLANN_DIST_HELLINGER) {
-        return __flann_compute_cluster_centers<HellingerDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<HellingerDistance<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else if (flann_distance_type==FLANN_DIST_CHI_SQUARE) {
-        return __flann_compute_cluster_centers<ChiSquareDistance<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<ChiSquareDistance<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else if (flann_distance_type==FLANN_DIST_KULLBACK_LEIBLER) {
-        return __flann_compute_cluster_centers<KL_Divergence<T> >(dataset, rows, cols, clusters, result, flann_params);
+        return __flann_compute_cluster_centers<KL_Divergence<T> >(dataset, rows, cols, clusters, result_centers, flann_params);
     }
     else {
         Logger::error( "Distance type unsupported in the C bindings, use the C++ bindings instead\n");
@@ -1255,28 +1254,28 @@ int _flann_compute_cluster_centers(T* dataset, int rows, int cols, int clusters,
     }
 }
 
-int flann_compute_cluster_centers(float* dataset, int rows, int cols, int clusters, float* result, FLANNParameters* flann_params)
+int flann_compute_cluster_centers(float* dataset, int rows, int cols, int clusters, float* result_centers, FLANNParameters* flann_params)
 {
-    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
+    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result_centers, flann_params);
 }
 
-int flann_compute_cluster_centers_float(float* dataset, int rows, int cols, int clusters, float* result, FLANNParameters* flann_params)
+int flann_compute_cluster_centers_float(float* dataset, int rows, int cols, int clusters, float* result_centers, FLANNParameters* flann_params)
 {
-    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
+    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result_centers, flann_params);
 }
 
-int flann_compute_cluster_centers_double(double* dataset, int rows, int cols, int clusters, double* result, FLANNParameters* flann_params)
+int flann_compute_cluster_centers_double(double* dataset, int rows, int cols, int clusters, double* result_centers, FLANNParameters* flann_params)
 {
-    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
+    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result_centers, flann_params);
 }
 
-int flann_compute_cluster_centers_byte(unsigned char* dataset, int rows, int cols, int clusters, float* result, FLANNParameters* flann_params)
+int flann_compute_cluster_centers_int(int* dataset, int rows, int cols, int clusters, float* result_centers, FLANNParameters* flann_params)
 {
-    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
+    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result_centers, flann_params);
 }
 
-int flann_compute_cluster_centers_int(int* dataset, int rows, int cols, int clusters, float* result, FLANNParameters* flann_params)
+int flann_compute_cluster_centers_byte(unsigned char* dataset, int rows, int cols, int clusters, float* result_centers, FLANNParameters* flann_params)
 {
-    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
+    return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result_centers, flann_params);
 }
 
