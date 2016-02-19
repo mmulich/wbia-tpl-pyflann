@@ -596,6 +596,10 @@ FLANN_EXPORT int flann_compute_cluster_centers_int(int* dataset,
                                                    struct FLANNParameters* flann_params);
 
 
+
+// END DEFINE BINDINGS
+
+
 #ifdef __cplusplus
 }
 
