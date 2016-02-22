@@ -235,9 +235,6 @@ class FLANN(object):
 
     def add_points(self, new_pts, rebuild_threshold=2):
         """
-        Adds pts to the current index. If the number of added points is more
-        than a factor of rebuild_threshold larger than the original number of
-        points, the index is rebuilt.
         """
         if new_pts.dtype.type not in allowed_types:
             raise FLANNException('Cannot handle type: %s' % new_pts.dtype)
@@ -246,9 +243,9 @@ class FLANN(object):
         new_pts = ensure_2d_array(new_pts, default_flags)
         rows = new_pts.shape[0]
         flann.add_points[self.__curindex_type](self.__curindex, new_pts, rows, rebuild_threshold)
-        self.__added_data.append(new_pts)
+        return self.__added_data.append(new_pts)
 
-    def remove_point(self, id_):
+    def remove_point(self, point_id):
         """
         Removes a point from the index
 
@@ -257,8 +254,8 @@ class FLANN(object):
 
         Returns: void
         """
-        flann.remove_point[self.__curindex_type](self.__curindex, id_)
-        self.__removed_ids.append(id_)
+        flann.remove_point[self.__curindex_type](self.__curindex, point_id)
+        self.__removed_ids.append(point_id)
 
     def remove_points(self, id_list):
         """
@@ -271,11 +268,9 @@ class FLANN(object):
         """
         id_list = np.array(id_list, dtype=np.int32)
         num = len(id_list)
+
         flann.remove_points[self.__curindex_type](self.__curindex, id_list, num)
         self.__removed_ids.extend(id_list)
-        #for id_ in id_list:
-        #    self.remove_point(id_)
-        #    #flann.remove_point[self.__curindex_type](self.__curindex, id_)
 
     def clean_removed_points(self):
         """
@@ -295,7 +290,6 @@ class FLANN(object):
         """
         Loads an index previously saved to disk.
         """
-
         if pts.dtype.type not in allowed_types:
             raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
@@ -406,7 +400,6 @@ class FLANN(object):
         The memory used by the dataset that was indexed is not freed
         unless there are no other references to those numpy arrays.
         """
-
         self.__flann_parameters.update(kwargs)
 
         if self.__curindex is not None:
@@ -448,9 +441,7 @@ class FLANN(object):
                                         max_iterations,
                                         dtype, **kwargs)
 
-    def hierarchical_kmeans(self, pts, branch_size, num_branches,
-                            max_iterations=None,
-                            dtype=None, **kwargs):
+    def hierarchical_kmeans(self, pts, branch_size, num_branches, max_iterations=None, dtype=None, **kwargs):
         """
         Clusters the data by using multiple runs of kmeans to
         recursively partition the dataset.  The number of resulting

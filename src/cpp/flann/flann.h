@@ -304,8 +304,7 @@ Params:
     cols = number of columns in the dataset (feature dimensionality)
     testset = pointer to a query set stored in row major order
     tcount = number of rows (features) in the query dataset (same dimensionality as features in the dataset)
-    result_ids = pointer to matrix for the indices of the nearest neighbors of the testset features in the dataset
-        (must have tcount number of rows and nn number of cols)
+    result_ids = pointer to matrix for the indices of the nearest neighbors of the testset features in the dataset (must have tcount number of rows and nn number of columns)
     nn = how many nearest neighbors to return
     flann_params = generic flann parameters
 
@@ -330,10 +329,8 @@ Params:
     index_ptr = the index (constructed previously using flann_build_index).
     testset = pointer to a query set stored in row major order
     tcount = number of rows (features) in the query dataset (same dimensionality as features in the dataset)
-    result_ids = pointer to matrix for the indices of the nearest neighbors of the testset features in the dataset
-        (must have tcount number of rows and nn number of cols)
-    dists = pointer to matrix for the distances of the nearest neighbors of the testset features in the dataset
-        (must have tcount number of rows and 1 column)
+    result_ids = pointer to matrix for the indices of the nearest neighbors of the testset features in the dataset (must have tcount number of rows and nn number of cols)
+    dists = pointer to matrix for the distances of the nearest neighbors of the testset features in the dataset (must have tcount number of rows and 1 column)
     nn = how many nearest neighbors to return
     flann_params = generic flann parameters
 

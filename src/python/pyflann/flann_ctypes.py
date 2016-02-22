@@ -206,19 +206,6 @@ class FlannLib(object):
 
 flann = FlannLib()
 
-
-flannlib.flann_log_verbosity.restype = None
-flannlib.flann_log_verbosity.argtypes = [
-    c_int  # level
-]
-
-
-flannlib.flann_set_distance_type.restype = None
-flannlib.flann_set_distance_type.argtypes = [
-    c_int,
-    c_int,
-]
-
 type_mappings = ( ('float', 'float32'),
                   ('double', 'float64'),
                   ('byte', 'uint8'),
@@ -250,6 +237,19 @@ def define_functions(fmtstr):
 # DEFINE BINDINGS
 
 
+flannlib.flann_log_verbosity.restype = None
+flannlib.flann_log_verbosity.argtypes = [
+    c_int  # level
+]
+
+
+flannlib.flann_set_distance_type.restype = None
+flannlib.flann_set_distance_type.argtypes = [
+    c_int,
+    c_int,
+]
+
+
 flann.build_index = {}
 define_functions(r"""
 flannlib.flann_build_index_%(C)s.restype = FLANN_INDEX
@@ -268,7 +268,7 @@ flann.save_index = {}
 define_functions(r"""
 flannlib.flann_save_index_%(C)s.restype = None
 flannlib.flann_save_index_%(C)s.argtypes = [
-        FLANN_INDEX,  # index_id
+        FLANN_INDEX,  # index_ptr
         c_char_p,  # filename
 ]
 flann.save_index[%(numpy)s] = flannlib.flann_save_index_%(C)s
@@ -297,7 +297,7 @@ flannlib.flann_find_nearest_neighbors_%(C)s.argtypes = [
         c_int,  # cols
         ndpointer(%(numpy)s, ndim=2, flags='aligned, c_contiguous'),  # testset
         c_int,  # tcount
-        ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result (ids)
+        ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result_ids
         ndpointer(float32, ndim=2, flags='aligned, c_contiguous, writeable'),  # dists
         c_int,  # nn
         POINTER(FLANNParameters),  # flann_params
@@ -324,10 +324,10 @@ flann.find_nearest_neighbors_index = {}
 define_functions(r"""
 flannlib.flann_find_nearest_neighbors_index_%(C)s.restype = c_int
 flannlib.flann_find_nearest_neighbors_index_%(C)s.argtypes = [
-        FLANN_INDEX,  # index_id
+        FLANN_INDEX,  # index_ptr
         ndpointer(%(numpy)s, ndim=2, flags='aligned, c_contiguous'),  # testset
         c_int,  # tcount
-        ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result (ids)
+        ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result_ids
         ndpointer(float32, ndim=2, flags='aligned, c_contiguous, writeable'),  # dists
         c_int,  # nn
         POINTER(FLANNParameters),  # flann_params
@@ -337,7 +337,7 @@ flann.find_nearest_neighbors_index[%(numpy)s] = flannlib.flann_find_nearest_neig
 # fix definition for the 'double' case
 flannlib.flann_find_nearest_neighbors_index_double.restype = c_int
 flannlib.flann_find_nearest_neighbors_index_double.argtypes = [
-    FLANN_INDEX,  # index_id
+    FLANN_INDEX,  # index_ptr
     ndpointer(float64, ndim=2, flags='aligned, c_contiguous'),  # testset
     c_int,  # tcount
     ndpointer(int32, ndim=2, flags='aligned, c_contiguous, writeable'),  # result
@@ -352,7 +352,7 @@ flann.radius_search = {}
 define_functions(r"""
 flannlib.flann_radius_search_%(C)s.restype = c_int
 flannlib.flann_radius_search_%(C)s.argtypes = [
-        FLANN_INDEX,  # index_id
+        FLANN_INDEX,  # index_ptr
         ndpointer(%(numpy)s, ndim=1, flags='aligned, c_contiguous'),  # query
         ndpointer(int32, ndim=1, flags='aligned, c_contiguous, writeable'),  # indices
         ndpointer(float32, ndim=1, flags='aligned, c_contiguous, writeable'),  # dists
@@ -365,7 +365,7 @@ flann.radius_search[%(numpy)s] = flannlib.flann_radius_search_%(C)s
 # fix definition for the 'double' case
 flannlib.flann_radius_search_double.restype = c_int
 flannlib.flann_radius_search_double.argtypes = [
-    FLANN_INDEX,  # index_id
+    FLANN_INDEX,  # index_ptr
     ndpointer(float64, ndim=1, flags='aligned, c_contiguous'),  # query
     ndpointer(int32, ndim=1, flags='aligned, c_contiguous, writeable'),  # indices
     ndpointer(float64, ndim=1, flags='aligned, c_contiguous, writeable'),  # dists
@@ -406,7 +406,7 @@ flann.free_index = {}
 define_functions(r"""
 flannlib.flann_free_index_%(C)s.restype = None
 flannlib.flann_free_index_%(C)s.argtypes = [
-        FLANN_INDEX,  # index_id
+        FLANN_INDEX,  # index_ptr
         POINTER(FLANNParameters),  # flann_params
 ]
 flann.free_index[%(numpy)s] = flannlib.flann_free_index_%(C)s
