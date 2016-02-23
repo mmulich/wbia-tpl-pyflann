@@ -28,6 +28,7 @@ echo "PYEXE              = $PYEXE"
 echo "PYTHON_EXECUTABLE  = $PYTHON_EXECUTABLE"
 echo "LOCAL_PREFIX       = $LOCAL_PREFIX"
 echo "INSTALL_CMD        = $INSTALL_CMD"
+echo "_SUDO              = $_SUDO"
 
 # Configure make build install
 cmake -G "Unix Makefiles" \
@@ -90,15 +91,9 @@ flann_setuptools_install()
     python ../../build/src/python/setup.py develop
     sudo python ../../build/src/python/setup.py develop
 
+    python ../../build/src/python/setup.py develop --uninstall
     sudo python ../../build/src/python/setup.py develop --uninstall
 }
-#setupinstall_flann()
-#{
-#    code 
-#    cd flann
-#    cd src/python
-#    python ../../build/src/python/setup.py install
-#}
 
 
 uninstall_flann()
