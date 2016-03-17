@@ -100,6 +100,14 @@ class FLANN(object):
         #print('FLANN OBJECT IS DELETED')
         self.delete_index()
 
+    @property
+    def shape(self):
+        return self.get_indexed_shape()
+
+    @property
+    def __len__(self):
+        return self.shape[0]
+
     def get_indexed_shape(self):
         """ returns the shape of the data being indexed """
         npts, dim = self.__curindex_data.shape
@@ -386,7 +394,7 @@ class FLANN(object):
 
         self.__flann_parameters.update(kwargs)
 
-        if self.__curindex is not None:
+        if self.__curindex is not None and flann is not None:
             flann.free_index[self.__curindex_type](
                 self.__curindex, pointer(self.__flann_parameters))
             self.__curindex = None
