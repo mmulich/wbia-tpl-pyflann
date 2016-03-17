@@ -3,6 +3,9 @@
 #cd $REPODIR/flann
 
 #rm -rf build
+export ORIGDIR=$(pwd)
+export FLANNDIR=$ORIGDIR
+
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
 mkdir build
 
@@ -60,6 +63,14 @@ $_SUDO make install
 # FIXME: messes up the code to find the libflann.so file when using build27
 #cd ../src/python
 #$_SUDO python ../../build/src/python/setup.py develop
+
+# Develop pyflann
+cd $FLANNDIR/src/python
+$_SUDO python ../../build/src/python/setup.py develop
+
+cd $FLANNDIR
+#cd $ORIGDIR
+
 
 python -c "import pyflann; print(pyflann.__file__)"
 python -c "import pyflann; print(pyflann)"
