@@ -3,6 +3,9 @@
 #cd $REPODIR/flann
 
 #rm -rf build
+export ORIGDIR=$(pwd)
+export FLANNDIR=$ORIGDIR
+
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
 mkdir build
 
@@ -47,9 +50,9 @@ cmake -G "Unix Makefiles" \
 
     #-DCMAKE_VERBOSE_MAKEFILE=On\
     #-DCUDA_VERBOSE_BUILD=On\
-    #-DCUDA_NVCC_FLAGS=-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_20,code=sm_21 
+    #-DCUDA_NVCC_FLAGS=-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_20,code=sm_21
 
-make -j$NCPUS 
+make -j$NCPUS
 $_SUDO make install
 #make -j$NCPUS || { echo "FAILED MAKE" ; exit 1; }
 
@@ -90,11 +93,12 @@ flann_setuptools_install()
     python ../../build/src/python/setup.py develop
     sudo python ../../build/src/python/setup.py develop
 
+    python ../../build/src/python/setup.py develop --uninstall
     sudo python ../../build/src/python/setup.py develop --uninstall
 }
 #setupinstall_flann()
 #{
-#    code 
+#    code
 #    cd flann
 #    cd src/python
 #    python ../../build/src/python/setup.py install
@@ -112,7 +116,7 @@ uninstall_flann()
 
     ls -al /home/joncrall/venv/local/lib/python2.7/site-packages/pyflann/lib
 
-    # The add remove/error branch info 
+    # The add remove/error branch info
     # Seems to work here: 880433b352d190fcbef78ea95d94ec8324059424
     # Seems to fail here: e5b9cbeabc9f790e231fbb91376a6842207565ba
 }
@@ -158,9 +162,9 @@ debug_flann()
    Memcheck:Cond
    fun:PyObject_Realloc
 }
-EOL' 
+EOL'
     valgrind --tool=memcheck --suppressions=valgrind-python.supp python -E -tt ./examples/example.py
 
     valgrind --tool=memcheck --suppressions=valgrind-python.supp python  ./examples/example.py
-    
+
 }

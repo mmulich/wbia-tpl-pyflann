@@ -154,51 +154,71 @@ def load_flann_library():
 
     libnames = ['libflann.so']
     libdir = 'lib'
+
+    verbose = '--verbose' in sys.argv
+    verbose |= '--veryverbose' in sys.argv
+    verbose |= '--very-verbose' in sys.argv
+    verbose |= '--verbflann' in sys.argv
+    verbose |= '--verb-flann' in sys.argv
+
     if sys.platform == 'win32':
         libnames = ['flann.dll', 'libflann.dll']
     elif sys.platform == 'darwin':
         libnames = ['libflann.dylib']
 
+    if verbose:
+        print('[flann] Loading FLANN library')
+
+    flannlib = None
+
     while root_dir is not None:
         for libname in libnames:
             try:
                 libpath = os.path.join(root_dir, libdir, libname)
-                print('Trying %s' % (libpath,))
+                if verbose:
+                    print('[flann] Trying %s' % (libpath,))
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
-                return flannlib
+                break
             except Exception:
-                pass
+                flannlib = None
             try:
                 libpath = os.path.join(root_dir, 'build', libdir, libname)
-                print('Trying %s' % (libpath,))
+                if verbose:
+                    print('[flann] Trying %s' % (libpath,))
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
-                return flannlib
+                break
             except Exception:
-                pass
+                flannlib = None
+        if flannlib is not None:
+            break
         tmp = os.path.dirname(root_dir)
         if tmp == root_dir:
             root_dir = None
         else:
             root_dir = tmp
 
-    # if we didn't find the library so far, try loading without
-    # a full path as a last resort
-    for libname in libnames:
-        try:
-            print('Trying %s' % (libname,))
-            tried_paths.append(libname)
-            flannlib = cdll[libname]
-            return flannlib
-        except:
-            pass
+    if flannlib is None:
+        # if we didn't find the library so far, try loading without
+        # a full path as a last resort
+        for libpath in libnames:
+            try:
+                if verbose:
+                    print('[flann] Trying %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
+                break
+            except:
+                flannlib = None
 
-    return None
+    if flannlib is None:
+        raise ImportError('Cannot load FLANN library. Did you compile FLANN?')
+    elif verbose:
+        print('[flann] Using %r' % (flannlib,))
+    return flannlib
 
 flannlib = load_flann_library()
-if flannlib is None:
-    raise ImportError('Cannot load dynamic library. Did you compile FLANN?')
 
 
 class FlannLib(object):
