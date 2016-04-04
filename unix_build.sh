@@ -68,6 +68,8 @@ $_SUDO make install
 cd $FLANNDIR/src/python
 $_SUDO python ../../build/src/python/setup.py develop
 
+# NODE to use utprof.py you need to have flann sudo installed 
+
 cd $FLANNDIR
 #cd $ORIGDIR
 
