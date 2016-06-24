@@ -118,6 +118,10 @@ flann_setuptools_install()
 
 uninstall_flann()
 {
+    sudo pip uninstall flann
+    pip uninstall flann
+    sudo pip uninstall pyflann
+    pip uninstall pyflann
     pip list | grep flann
     python -c "import pyflann; print(pyflann.__file__)"
     python -c "import pyflann, os.path; print(os.path.dirname(pyflann.__file__))"
