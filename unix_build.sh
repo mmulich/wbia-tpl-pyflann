@@ -31,6 +31,7 @@ echo "PYEXE              = $PYEXE"
 echo "PYTHON_EXECUTABLE  = $PYTHON_EXECUTABLE"
 echo "LOCAL_PREFIX       = $LOCAL_PREFIX"
 echo "INSTALL_CMD        = $INSTALL_CMD"
+echo "_SUDO              = $_SUDO"
 
 # Configure make build install
 cmake -G "Unix Makefiles" \
@@ -62,6 +63,15 @@ $_SUDO make install
 # FIXME: messes up the code to find the libflann.so file when using build27
 #cd ../src/python
 #$_SUDO python ../../build/src/python/setup.py develop
+
+# Develop pyflann
+cd $FLANNDIR/src/python
+$_SUDO python ../../build/src/python/setup.py develop
+
+# NODE to use utprof.py you need to have flann sudo installed
+
+cd $FLANNDIR
+#cd $ORIGDIR
 
 python -c "import pyflann; print(pyflann.__file__)"
 python -c "import pyflann; print(pyflann)"
@@ -107,6 +117,10 @@ flann_setuptools_install()
 
 uninstall_flann()
 {
+    sudo pip uninstall flann
+    pip uninstall flann
+    sudo pip uninstall pyflann
+    pip uninstall pyflann
     pip list | grep flann
     python -c "import pyflann; print(pyflann.__file__)"
     python -c "import pyflann, os.path; print(os.path.dirname(pyflann.__file__))"
