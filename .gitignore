@@ -18,4 +18,6 @@ build_win
 dist/
 flann.kdev4
 TODO
-
+CMakeCache.txt
+CMakeFiles/
+src/python/flann.egg-info/
