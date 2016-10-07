@@ -7,6 +7,13 @@ export ORIGDIR=$(pwd)
 export FLANNDIR=$ORIGDIR
 
 python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
+
+echo 'Removing old build'
+rm -rf build
+rm -rf CMakeFiles
+rm -rf CMakeCache.txt
+rm -rf cmake_install.cmake
+
 mkdir build
 
 #sudo apt-get install libhdf5-serial-1.8.4
@@ -20,7 +27,7 @@ cd build
 export PYEXE=$(which python2.7)
 export PYTHON_EXECUTABLE=$($PYEXE -c "import sys; print(sys.executable)")
 if [[ "$VIRTUAL_ENV" == ""  ]]; then
-    export LOCAL_PREFIX=/usr/local
+    export LOCAL_PREFIX=/opt/local
     export _SUDO="sudo"
 else
     export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local

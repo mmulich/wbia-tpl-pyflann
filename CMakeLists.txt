@@ -4,6 +4,19 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
+# Clang2 = Clang + OpenMP built for OSX Mavericks
+# http://goo.gl/1Tg0Zj
+if (APPLE)
+    message("Detected APPLE system")
+    SET(CLANG2 On)
+endif()
+
+if (APPLE AND CLANG2)
+    message("Using clang2")
+    set(CMAKE_C_COMPILER "clang2")
+    set(CMAKE_CXX_COMPILER "clang2++")
+endif()
+
 project(flann)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
@@ -12,6 +25,12 @@ set(FLANN_VERSION 1.8.4)
 DISSECT_VERSION()
 GET_OS_INFO()
 
+if (APPLE)
+    #MacPorts
+    message("USING MACPORTS")
+    include_directories(/opt/local/include)
+    link_directories(/opt/local/lib)
+endif()
 
 # detect if using the Clang compiler
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
@@ -21,6 +40,15 @@ endif ()
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif ()
+
+if(APPLE AND CLANG2)
+    # Add flags to support clang2
+    message("APPLE + CLANG2: Adding libc flags for clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lc++")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -112,22 +140,22 @@ if (USE_MPI AND HDF5_IS_PARALLEL)
 endif()
 
 
-find_package(GTest) 
+find_package(GTest)
 if (NOT GTEST_FOUND)
 	message(WARNING "gtest library not found, some tests will not be run")
 endif()
 
-
-if (USE_OPENMP)
-    find_package(OpenMP)
-    if(OPENMP_FOUND)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-    else()
-        message(WARNING "OpenMP NOT found")
-    endif()
-endif()
+find_package(OpenMP)
+IF(OPENMP_FOUND)
+    message("Found OpenMP! ^_^")
+    # add flags for OpenMP
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_C_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_C_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+ELSE()
+    message("Missed OpenMP! x_x")
+ENDIF()
 
 
 # CUDA support
@@ -191,7 +219,7 @@ find_program(PACKAGE_MAKER_PROGRAM PackageMaker
 if(EXISTS ${PACKAGE_MAKER_PROGRAM})
   list(APPEND CPACK_GENERATOR "PackageMaker")
 endif(EXISTS ${PACKAGE_MAKER_PROGRAM})
- 
+
 set(CPACK_GENERATOR "${CPACK_GENERATOR}")
 set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_SET_DESTDIR ON)
