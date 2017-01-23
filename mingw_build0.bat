@@ -38,11 +38,22 @@ set CMAKE_GENERATOR="MinGW Makefiles"
 :: make command that doesn't freeze on mingw
 echo "BUILDING FLANN TAKES AWHILE. BE PATIENT."
 :: mingw32-make -j7 "MAKE=mingw32-make -j3" -f CMakeFiles\Makefile2 all
+::
 
-make
-make install
+IF "%CMAKE_GENERATOR%"=="MinGW Makefiles" (
+    mingw32-make
+) ELSE
+(
+    make
+    make install
+)
+
 exit /b
 
 :exit
 cd %ORIGINAL%
 exit /b
+
+
+:: cd 
+:: python ../../build/src/python/setup.py develop
