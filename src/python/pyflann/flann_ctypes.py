@@ -186,7 +186,10 @@ def load_flann_library():
                 flannlib = cdll[libpath]
                 break
             except Exception:
-                print('... failed')
+                if os.path.exists(libpath):
+                    print('... failed, but the file exists! CDLL error!')
+                else:
+                    print('... failed. The file does not exist')
                 flannlib = None
             # Try once with build/<libdir>
             try:
@@ -197,7 +200,10 @@ def load_flann_library():
                 flannlib = cdll[libpath]
                 break
             except Exception:
-                print('... failed')
+                if os.path.exists(libpath):
+                    print('... failed, but the file exists! CDLL error!')
+                else:
+                    print('... failed. The file does not exist')
                 flannlib = None
         if flannlib is not None:
             break
