@@ -147,6 +147,10 @@ FLANN_INDEX = c_void_p
 
 
 def load_flann_library():
+    """
+    CommandLine:
+        python -c "import pyflann" --verbose
+    """
 
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -173,6 +177,7 @@ def load_flann_library():
 
     while root_dir is not None:
         for libname in libnames:
+            # Try once with just <libdir>
             try:
                 libpath = os.path.join(root_dir, libdir, libname)
                 if verbose:
@@ -182,6 +187,7 @@ def load_flann_library():
                 break
             except Exception:
                 flannlib = None
+            # Try once with build/<libdir>
             try:
                 libpath = os.path.join(root_dir, 'build', libdir, libname)
                 if verbose:
