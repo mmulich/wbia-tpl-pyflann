@@ -147,6 +147,10 @@ FLANN_INDEX = c_void_p
 
 
 def load_flann_library():
+    """
+    CommandLine:
+        python -c "import pyflann" --verbose
+    """
 
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -170,9 +174,11 @@ def load_flann_library():
         print('[flann] Loading FLANN library')
 
     flannlib = None
+    
 
     while root_dir is not None:
         for libname in libnames:
+            # Try once with just <libdir>
             try:
                 libpath = os.path.join(root_dir, libdir, libname)
                 if verbose:
@@ -180,8 +186,16 @@ def load_flann_library():
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
                 break
-            except Exception:
+            except Exception: 
+                if os.path.exists(libpath):
+                    if verbose:
+                        print('... failed, but the file exists! CDLL error!')
+                    raise
+                else:
+                    if verbose:
+                        print('... failed. The file does not exist')
                 flannlib = None
+            # Try once with build/<libdir>
             try:
                 libpath = os.path.join(root_dir, 'build', libdir, libname)
                 if verbose:
@@ -190,6 +204,13 @@ def load_flann_library():
                 flannlib = cdll[libpath]
                 break
             except Exception:
+                if os.path.exists(libpath):
+                    if verbose: 
+                        print('... failed, but the file exists! CDLL error!')
+                    raise
+                else:
+                    if verbose:
+                        print('... failed. The file does not exist')
                 flannlib = None
         if flannlib is not None:
             break

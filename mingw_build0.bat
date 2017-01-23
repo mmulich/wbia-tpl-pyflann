@@ -6,18 +6,24 @@ goto :exit
 :build_flann
 :: helper variables
 set INSTALL32=C:\Program Files (x86)
+set INSTALL64=C:\Program Files
 set FLANN_INSTALL="%INSTALL32%\Flann"
-set CMAKE_EXE="%INSTALL32%\CMake 2.8\bin\cmake.exe"
-set CMAKE_GUI_EXE="%INSTALL32%\CMake 2.8\bin\cmake-gui.exe"
-set FLANN_DIR=%HOME%\code\flann
+::set CMAKE_EXE="%INSTALL32%\CMake 2.8\bin\cmake.exe"
+::set CMAKE_GUI_EXE="%INSTALL32%\CMake 2.8\bin\cmake-gui.exe"
+set CMAKE_EXE="%INSTALL64%\CMake\bin\cmake.exe"
+set CMAKE_GUI_EXE="%INSTALL64%\CMake\bin\cmake-gui.exe"
+set FLANN_DIR=%USERPROFILE%\code\flann
 
 cd %FLANN_DIR%
 :: rm -rf build
 mkdir build
 cd build
 
+:: set CMAKE_GENERATOR="MSYS Makefiles"
+set CMAKE_GENERATOR="MinGW Makefiles"
+
 :: OpenCV settings on windows
-%CMAKE_EXE% -G "MSYS Makefiles" ^
+%CMAKE_EXE% -G %CMAKE_GENERATOR% ^
 -DCMAKE_INSTALL_PREFIX=%FLANN_INSTALL% ^
 -DBUILD_MATLAB_BINDINGS=Off ^
 -DCMAKE_BUILD_TYPE=Release ^
@@ -32,11 +38,22 @@ cd build
 :: make command that doesn't freeze on mingw
 echo "BUILDING FLANN TAKES AWHILE. BE PATIENT."
 :: mingw32-make -j7 "MAKE=mingw32-make -j3" -f CMakeFiles\Makefile2 all
+::
 
-make
-make install
+IF "%CMAKE_GENERATOR%"=="MinGW Makefiles" (
+    mingw32-make
+) ELSE
+(
+    make
+    make install
+)
+
 exit /b
 
 :exit
 cd %ORIGINAL%
 exit /b
+
+
+:: cd 
+:: python ../../build/src/python/setup.py develop
