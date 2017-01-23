@@ -6,11 +6,12 @@ goto :exit
 :build_flann
 :: helper variables
 set INSTALL32=C:\Program Files (x86)
+set INSTALL64=C:\Program Files
 set FLANN_INSTALL="%INSTALL32%\Flann"
 ::set CMAKE_EXE="%INSTALL32%\CMake 2.8\bin\cmake.exe"
 ::set CMAKE_GUI_EXE="%INSTALL32%\CMake 2.8\bin\cmake-gui.exe"
-set CMAKE_EXE="%INSTALL32%\CMake\bin\cmake.exe"
-set CMAKE_GUI_EXE="%INSTALL32%\CMake\bin\cmake-gui.exe"
+set CMAKE_EXE="%INSTALL64%\CMake\bin\cmake.exe"
+set CMAKE_GUI_EXE="%INSTALL64%\CMake\bin\cmake-gui.exe"
 set FLANN_DIR=%USERPROFILE%\code\flann
 
 cd %FLANN_DIR%
