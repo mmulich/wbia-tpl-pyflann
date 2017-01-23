@@ -186,6 +186,7 @@ def load_flann_library():
                 flannlib = cdll[libpath]
                 break
             except Exception:
+                print('... failed')
                 flannlib = None
             # Try once with build/<libdir>
             try:
@@ -196,6 +197,7 @@ def load_flann_library():
                 flannlib = cdll[libpath]
                 break
             except Exception:
+                print('... failed')
                 flannlib = None
         if flannlib is not None:
             break
