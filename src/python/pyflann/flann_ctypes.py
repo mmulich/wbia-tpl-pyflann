@@ -174,6 +174,7 @@ def load_flann_library():
         print('[flann] Loading FLANN library')
 
     flannlib = None
+    
 
     while root_dir is not None:
         for libname in libnames:
@@ -185,11 +186,14 @@ def load_flann_library():
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
                 break
-            except Exception:
+            except Exception: 
                 if os.path.exists(libpath):
-                    print('... failed, but the file exists! CDLL error!')
+                    if verbose:
+                        print('... failed, but the file exists! CDLL error!')
+                    raise
                 else:
-                    print('... failed. The file does not exist')
+                    if verbose:
+                        print('... failed. The file does not exist')
                 flannlib = None
             # Try once with build/<libdir>
             try:
@@ -201,9 +205,12 @@ def load_flann_library():
                 break
             except Exception:
                 if os.path.exists(libpath):
-                    print('... failed, but the file exists! CDLL error!')
+                    if verbose: 
+                        print('... failed, but the file exists! CDLL error!')
+                    raise
                 else:
-                    print('... failed. The file does not exist')
+                    if verbose:
+                        print('... failed. The file does not exist')
                 flannlib = None
         if flannlib is not None:
             break
