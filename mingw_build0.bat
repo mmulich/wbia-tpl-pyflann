@@ -19,8 +19,11 @@ cd %FLANN_DIR%
 mkdir build
 cd build
 
+:: set CMAKE_GENERATOR="MSYS Makefiles"
+set CMAKE_GENERATOR="MinGW Makefiles"
+
 :: OpenCV settings on windows
-%CMAKE_EXE% -G "MSYS Makefiles" ^
+%CMAKE_EXE% -G %CMAKE_GENERATOR% ^
 -DCMAKE_INSTALL_PREFIX=%FLANN_INSTALL% ^
 -DBUILD_MATLAB_BINDINGS=Off ^
 -DCMAKE_BUILD_TYPE=Release ^
