@@ -185,14 +185,19 @@ def load_flann_library():
             plat_specifier += '-pydebug'
         return plat_specifier
 
-    distutils_libdir = join(
-        'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
-
     possible_subdirs = [
-        distutils_libdir,
-        'lib',
-        # 'build/lib',
     ]
+
+    try:
+        distutils_libdir = join(
+            'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
+        possible_subdirs.append(distutils_libdir)
+    except ImportError:
+        pass
+
+    possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
+    possible_subdirs.append('lib')
+    possible_subdirs.append('build/lib')
 
     if False:
         # Exhaustive checks to find library
