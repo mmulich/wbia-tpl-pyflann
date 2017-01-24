@@ -19,6 +19,11 @@ def find_path():
     lib_paths = [
         # abspath('@LIBRARY_OUTPUT_PATH@'),
         abspath('@LIBRARY_OUTPUT_DIRECTORY@'),
+        # hacks for msvc
+        abspath('@LIBRARY_OUTPUT_DIRECTORY@/Release'),
+        abspath('@LIBRARY_OUTPUT_DIRECTORY@/MinSizeRel'),
+        abspath('@LIBRARY_OUTPUT_DIRECTORY@/RelWithDebInfo'),
+        abspath('@LIBRARY_OUTPUT_DIRECTORY@/Debug'),
         # abspath(join(dirname(dirname(sys.argv[0])), '../../../lib'))
     ]
     print('lib_paths = %r' % (lib_paths,))
