@@ -185,15 +185,14 @@ def load_flann_library():
             plat_specifier += '-pydebug'
         return plat_specifier
 
-    possible_subdirs = [
-    ]
+    possible_subdirs = []
 
     try:
         distutils_libdir = join(
             'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
         possible_subdirs.append(distutils_libdir)
     except Exception:
-        possible_subdirs = join('build', 'lib', 'pyflann', 'lib')
+        possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
 
     possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
     possible_subdirs.append('lib')
