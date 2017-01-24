@@ -45,8 +45,10 @@ IF "%CMAKE_GENERATOR%"=="MinGW Makefiles" (
 ) ELSE
 (
     make
-    make install
 )
+
+:: install FLANN in editable mode
+pip install -e %FLANN_DIR%/src/python
 
 exit /b
 
