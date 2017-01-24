@@ -151,13 +151,10 @@ def load_flann_library():
     CommandLine:
         python -c "import pyflann" --verbose
     """
-
-    root_dir = os.path.abspath(os.path.dirname(__file__))
+    from os.path import join, abspath, dirname, exists, normpath
+    # flann_lib_path = os.environ.get('FLANN_LIBRARY_PATH', None)
 
     tried_paths = []
-
-    libnames = ['libflann.so']
-    libdir = 'lib'
 
     verbose = '--verbose' in sys.argv
     verbose |= '--veryverbose' in sys.argv
@@ -166,69 +163,104 @@ def load_flann_library():
     verbose |= '--verb-flann' in sys.argv
 
     if sys.platform == 'win32':
-        libnames = ['flann.dll', 'libflann.dll']
+        possible_libnames = ['flann.dll', 'libflann.dll']
     elif sys.platform == 'darwin':
-        libnames = ['libflann.dylib']
+        possible_libnames = ['libflann.dylib']
+    else:
+        possible_libnames = ['libflann.so']
+
+    # FIXME; this should really be @LIBRARY_OUTPUT_DIRECTORY@
 
     if verbose:
-        print('[flann] Loading FLANN library')
+        print('[flann] Loading FLANN shared library')
+
+    def get_plat_specifier():
+        """
+        Standard platform specifier used by distutils
+        """
+        import distutils
+        plat_name = distutils.util.get_platform()
+        plat_specifier = ".%s-%s" % (plat_name, sys.version[0:3])
+        if hasattr(sys, 'gettotalrefcount'):
+            plat_specifier += '-pydebug'
+        return plat_specifier
+
+    possible_subdirs = []
+
+    try:
+        distutils_libdir = join(
+            'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
+        possible_subdirs.append(distutils_libdir)
+    except Exception:
+        distutils_libdir = join('build', 'lib', 'pyflann', 'lib')
+
+    possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
+    possible_subdirs.append('lib')
+    possible_subdirs.append('build/lib')
+
+    if False:
+        # Exhaustive checks to find library
+        def gen_possible_libpaths():
+            root_dir = abspath(dirname(__file__))
+            while root_dir is not None:
+                for subdir in possible_subdirs:
+                    for libname in possible_libnames:
+                        libpath = normpath(join(root_dir, subdir, libname))
+                        yield libpath
+                tmp = dirname(root_dir)
+                if tmp == root_dir:
+                    root_dir = None
+                else:
+                    root_dir = tmp
+        possible_libpaths = gen_possible_libpaths()
+    else:
+        # Specific checks to find library
+        root_dir = abspath(dirname(__file__))
+        possible_libpaths = [
+            normpath(join(libdir, libname))
+            for libname in possible_libnames
+            for libdir in [
+                join(dirname(root_dir), distutils_libdir),
+                join(root_dir, 'lib'),
+                join(root_dir, '.'),
+                # join(root_dir, '../../../build/lib'),
+                # join(root_dir, 'build/lib'),
+                # join(root_dir, '.'),
+            ]
+        ]
 
     flannlib = None
-    
-
-    while root_dir is not None:
-        for libname in libnames:
-            # Try once with just <libdir>
-            try:
-                libpath = os.path.join(root_dir, libdir, libname)
+    for libpath in possible_libpaths:
+        if verbose:
+            print('[flann] Trying %s' % (libpath,))
+        tried_paths.append(libpath)
+        try:
+            flannlib = cdll[libpath]
+        except Exception:
+            flannlib = None
+            if exists(libpath):
                 if verbose:
-                    print('[flann] Trying %s' % (libpath,))
-                tried_paths.append(libpath)
-                flannlib = cdll[libpath]
-                break
-            except Exception: 
-                if os.path.exists(libpath):
-                    if verbose:
-                        print('... failed, but the file exists! CDLL error!')
-                    raise
-                else:
-                    if verbose:
-                        print('... failed. The file does not exist')
-                flannlib = None
-            # Try once with build/<libdir>
-            try:
-                libpath = os.path.join(root_dir, 'build', libdir, libname)
+                    print('[flann]... exists! CDLL error!')
+                raise
+            else:
                 if verbose:
-                    print('[flann] Trying %s' % (libpath,))
-                tried_paths.append(libpath)
-                flannlib = cdll[libpath]
-                break
-            except Exception:
-                if os.path.exists(libpath):
-                    if verbose: 
-                        print('... failed, but the file exists! CDLL error!')
-                    raise
-                else:
-                    if verbose:
-                        print('... failed. The file does not exist')
-                flannlib = None
-        if flannlib is not None:
-            break
-        tmp = os.path.dirname(root_dir)
-        if tmp == root_dir:
-            root_dir = None
+                    print('[flann] ... does not exist')
         else:
-            root_dir = tmp
+            if verbose:
+                print('[flann] ... exists')
+            break
 
     if flannlib is None:
-        # if we didn't find the library so far, try loading without
-        # a full path as a last resort
-        for libpath in libnames:
+        # if we didn't find the library so far, try loading
+        # using a relative path as a last resort
+        for libpath in possible_libnames:
             try:
                 if verbose:
-                    print('[flann] Trying %s' % (libpath,))
+                    print('[flann] Trying to fallback on %s' % (libpath,))
                 tried_paths.append(libpath)
                 flannlib = cdll[libpath]
+                import utool
+                utool.embed()
                 break
             except:
                 flannlib = None
