@@ -71,10 +71,20 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 #set the default path for built executables to the "bin" directory
+# TODO: replace with RUNTIME_OUTPUT_DIRECTORY
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+if ( MSVC )
+    # Make windows have the same behavior as unix in where it puts the libraries
+    set_target_properties( ${targetname} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_DIRECTORY} )
+    set_target_properties( ${targetname} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_DIRECTORY} )
+    set_target_properties( ${targetname} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${LIBRARY_OUTPUT_DIRECTORY} )
+    set_target_properties( ${targetname} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${LIBRARY_OUTPUT_DIRECTORY} )
+endif ( MSVC )
+
 # set output path for tests
 set(TEST_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/test)
 
