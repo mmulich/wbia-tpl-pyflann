@@ -193,7 +193,7 @@ def load_flann_library():
             'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
         possible_subdirs.append(distutils_libdir)
     except Exception:
-        pass
+        possible_subdirs = join('build', 'lib', 'pyflann', 'lib')
 
     possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
     possible_subdirs.append('lib')
