@@ -3,7 +3,8 @@
 tmp
 *.pyc
 *.pyo
-cmake_builds
+cmake-builds/*
+cmake_builds/*
 src/python/setup.py
 src/python/build
 src/matlab/*.dat
