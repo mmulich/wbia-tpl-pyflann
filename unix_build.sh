@@ -7,20 +7,16 @@ export ORIGDIR=$(pwd)
 export FLANNDIR=$ORIGDIR
 #export FLANNDIR=~/code/flann
 
-python2.7 -c "import utool as ut; print('keeping build dir' if not ut.get_argflag('--rmbuild') else ut.delete('build'))" $@
-
-echo 'Removing old build'
-rm -rf build
-rm -rf CMakeFiles
-rm -rf CMakeCache.txt
-rm -rf cmake_install.cmake
+#echo 'Removing old build'
+#rm -rf CMakeFiles
+#rm -rf CMakeCache.txt
+#rm -rf cmake_install.cmake
 
 mkdir -p cmake-builds/build27
+cd cmake-builds/build27
 
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
-
-cd cmake-builds/build27
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
