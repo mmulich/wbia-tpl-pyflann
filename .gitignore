@@ -2,6 +2,10 @@
 .*
 tmp
 *.pyc
+*.pyo
+cmake_builds
+src/python/setup.py
+src/python/build
 src/matlab/*.dat
 src/matlab/test.m
 
