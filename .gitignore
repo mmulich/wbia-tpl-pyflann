@@ -26,6 +26,8 @@ TODO
 #build
 #build_win
 #dist/
+cmake-builds
 
-#src/python/setup.py
-#src/python/flann.egg-info/
+src/python/setup.py
+src/python/dist/
+src/python/flann.egg-info/
