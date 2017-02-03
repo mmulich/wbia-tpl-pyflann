@@ -16,8 +16,10 @@ set FLANN_DIR=%USERPROFILE%\code\flann
 
 cd %FLANN_DIR%
 :: rm -rf build
-mkdir build
-cd build
+mkdir cmake_builds
+cd cmake_builds
+mkdir build.win32-cpython27
+cd build.win32-cpython27
 
 :: set CMAKE_GENERATOR="MSYS Makefiles"
 set CMAKE_GENERATOR="MinGW Makefiles"
@@ -47,6 +49,9 @@ IF "%CMAKE_GENERATOR%"=="MinGW Makefiles" (
     make
 )
 
+cd %FLANN_DIR%/src/python
+:: need to build first to move in libs
+python setup.py build
 :: install FLANN in editable mode
 pip install -e %FLANN_DIR%/src/python
 

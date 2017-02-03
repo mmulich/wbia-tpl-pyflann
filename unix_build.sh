@@ -15,12 +15,12 @@ rm -rf CMakeFiles
 rm -rf CMakeCache.txt
 rm -rf cmake_install.cmake
 
-mkdir -p build
+mkdir -p cmake-builds/build27
 
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
 
-cd build
+cd cmake-builds/build27
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
@@ -50,7 +50,7 @@ cmake -G "Unix Makefiles" \
     -DBUILD_MATLAB_BINDINGS=Off \
     -DBUILD_CUDA_LIB=Off \
     -DCMAKE_INSTALL_PREFIX=$LOCAL_PREFIX \
-    ..
+    ../..
 
     #-DNVCC_COMPILER_BINDIR=/usr/bin/gcc \
     #-DCUDA_BUILD_CUBIN=On \
@@ -62,13 +62,14 @@ cmake -G "Unix Makefiles" \
     #-DCUDA_VERBOSE_BUILD=On\
     #-DCUDA_NVCC_FLAGS=-gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_20,code=sm_21
 
-cmake .
 export NCPUS=$(grep -c ^processor /proc/cpuinfo)
 make -j$NCPUS
 
-
-# Develop pyflann
 echo $FLANNDIR
+cd $FLANNDIR/src/python
+# need to build to move in libs
+python setup.py build
+# Develop pyflann
 pip install -e $FLANNDIR/src/python
 
 #cd $FLANNDIR/src/python
