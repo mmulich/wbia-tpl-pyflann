@@ -12,17 +12,15 @@ export FLANNDIR=$ORIGDIR
 #rm -rf CMakeCache.txt
 #rm -rf cmake_install.cmake
 
-mkdir -p cmake-builds/build27
-cd cmake-builds/build27
-
 #sudo apt-get install libhdf5-serial-1.8.4
 #libhdf5-openmpi-dev
 
 #sudo apt-get install libcr-dev mpich2 mpich2-doc
 
 # Grab correct python executable
-export PYEXE=$(which python2.7)
+export PYEXE=$(which python)
 export PYTHON_EXECUTABLE=$($PYEXE -c "import sys; print(sys.executable)")
+export PYTHON_VERSION=$($PYEXE -c "import sys; print(sys.version[0:3])")
 if [[ "$VIRTUAL_ENV" == ""  ]]; then
     export LOCAL_PREFIX=/opt/local
     export _SUDO="sudo"
@@ -30,6 +28,9 @@ else
     export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local
     export _SUDO=""
 fi
+
+mkdir -p cmake-builds/build$PYTHON_VERSION
+cd cmake-builds/build$PYTHON_VERSION
 
 echo "PYEXE              = $PYEXE"
 echo "PYTHON_EXECUTABLE  = $PYTHON_EXECUTABLE"

@@ -10,7 +10,7 @@ except ImportError:
     from distutils.core import setup
 # from distutils.command.install import install as _install
 from os.path import exists, abspath, dirname, join
-import sys
+# import sys
 
 possible_libs = ['libflann.so', 'flann.dll', 'libflann.dll', 'libflann.dylib']
 
@@ -32,7 +32,7 @@ def find_path():
     for path in lib_paths:
         for lib in possible_libs:
             if exists(join(path, lib)):
-		print('path = %r' % path)
+                print('path = %r' % path)
                 return path
 
 
