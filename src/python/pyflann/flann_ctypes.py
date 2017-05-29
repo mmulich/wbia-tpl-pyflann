@@ -188,8 +188,13 @@ def load_flann_library():
     possible_subdirs = []
 
     try:
+        # FIXME: this should be put in src dir by cmake scripts
         distutils_libdir = join(
             'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
+        possible_subdirs.append(distutils_libdir)
+
+        distutils_libdir = join(
+            'cmake_builds', 'build' + get_plat_specifier(), 'lib')
         possible_subdirs.append(distutils_libdir)
     except Exception:
         distutils_libdir = join('build', 'lib', 'pyflann', 'lib')

@@ -25,7 +25,8 @@ if [[ "$VIRTUAL_ENV" == ""  ]]; then
     export LOCAL_PREFIX=/opt/local
     export _SUDO="sudo"
 else
-    export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local
+    #export LOCAL_PREFIX=$($PYEXE -c "import sys; print(sys.prefix)")/local
+    export LOCAL_PREFIX=$VIRTUAL_ENV
     export _SUDO=""
 fi
 
