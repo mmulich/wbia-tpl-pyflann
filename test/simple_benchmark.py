@@ -12,7 +12,7 @@ def run_benchmark():
     import ubelt as ub
     data_dim = 128
     num_dpts = 1000000
-    num_qpts = 10000
+    num_qpts = 100000
     num_neighbs = 5
     random_seed = 42
     rng = np.random.RandomState(0)
@@ -33,6 +33,7 @@ def run_benchmark():
         with ub.Timer(verbose=0) as t:
             _ = flann.nn_index(testset, num_neighbs)  # NOQA
         times.append(t.ellapsed)
+    print(np.mean(times))
 
 if __name__ == '__main__':
     run_benchmark()
