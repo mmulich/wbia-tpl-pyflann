@@ -12,7 +12,7 @@ def run_benchmark():
     import ubelt as ub
     data_dim = 128
     num_dpts = 1000000
-    num_qpts = 100000
+    num_qpts = 25000
     num_neighbs = 5
     random_seed = 42
     rng = np.random.RandomState(0)
@@ -24,7 +24,7 @@ def run_benchmark():
     print('building datset for %d vecs' % (len(dataset)))
 
     with ub.Timer(label='building kdtrees', verbose=True) as t:
-        params = flann.build_index(dataset, algorithm='kdtree', trees=4,
+        params = flann.build_index(dataset, algorithm='kdtree', trees=8,
                                    random_seed=random_seed)
 
     print(params)
