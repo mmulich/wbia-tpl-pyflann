@@ -24,8 +24,10 @@ def run_benchmark():
     print('building datset for %d vecs' % (len(dataset)))
 
     with ub.Timer(label='building kdtrees', verbose=True) as t:
-        flann.build_index(dataset, algorithm='kdtree', trees=4,
-                          random_seed=random_seed)
+        params = flann.build_index(dataset, algorithm='kdtree', trees=4,
+                                   random_seed=random_seed)
+
+    print(params)
 
     qvec_chunks = list(ub.chunks(testset, 1000))
     times = []
