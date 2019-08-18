@@ -10,4 +10,3 @@ Version: @FLANN_VERSION@
 Requires: @PKG_EXTERNAL_DEPS@
 Libs: -L${libdir} -lflann -lflann_cpp
 Cflags: -I${includedir}
-

@@ -29,7 +29,9 @@ if (BUILD_CUDA_LIB)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_COMPILER_IS_GNUCC)
-    add_library(flann_cpp SHARED "")
+    #add_library(flann_cpp SHARED "")
+    add_library(flann_cpp SHARED "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
+    #add_library(flann_cpp SHARED ${CPP_SOURCES})
     set_target_properties(flann_cpp PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(flann_cpp -Wl,-whole-archive flann_cpp_s -Wl,-no-whole-archive)
 
@@ -57,14 +59,14 @@ set_target_properties(flann_cpp PROPERTIES
    VERSION ${FLANN_VERSION}
    SOVERSION ${FLANN_SOVERSION}
    DEFINE_SYMBOL FLANN_EXPORTS
-) 
+)
 
 if (BUILD_CUDA_LIB)
     set_target_properties(flann_cuda PROPERTIES
        VERSION ${FLANN_VERSION}
        SOVERSION ${FLANN_SOVERSION}
        DEFINE_SYMBOL FLANN_EXPORTS
-    ) 
+    )
 endif()
 
 
@@ -88,7 +90,8 @@ if (BUILD_C_BINDINGS)
     set_property(TARGET flann_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_COMPILER_IS_GNUCC)
-        add_library(flann SHARED "")
+        add_library(flann SHARED "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
+        #add_library(flann SHARED "")
         set_target_properties(flann PROPERTIES LINKER_LANGUAGE CXX)
         target_link_libraries(flann -Wl,-whole-archive flann_s -Wl,-no-whole-archive)
     else()
@@ -103,7 +106,7 @@ if (BUILD_C_BINDINGS)
        VERSION ${FLANN_VERSION}
        SOVERSION ${FLANN_SOVERSION}
        DEFINE_SYMBOL FLANN_EXPORTS
-    ) 
+    )
 
     set_target_properties(flann PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_DIRECTORY} )
     set_target_properties(flann PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_DIRECTORY} )
@@ -116,15 +119,6 @@ if (BUILD_C_BINDINGS)
     set_target_properties(flann_s PROPERTIES LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${LIBRARY_OUTPUT_DIRECTORY} )
 endif()
 
-if(WIN32)
-if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
-    install (
-        TARGETS flann
-        RUNTIME DESTINATION share/flann/matlab
-    )
-endif()
-endif(WIN32)
-
 
 install (
     TARGETS flann_cpp flann_cpp_s
@@ -132,7 +126,7 @@ install (
     LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
     ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
 )
- 
+
 if (BUILD_CUDA_LIB)
     install (
         TARGETS flann_cuda flann_cuda_s
