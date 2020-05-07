@@ -24,7 +24,11 @@
 #(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 #THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#from ctypes import *
+#from ctypes.util import find_library
 from numpy import (float32, float64, uint8, int32, require)
+#import ctypes
+#import numpy as np
 from ctypes import (Structure, c_char_p, c_int, c_float, c_uint, c_long,
                     c_void_p, cdll, POINTER)
 from numpy.ctypeslib import ndpointer
@@ -143,58 +147,134 @@ FLANN_INDEX = c_void_p
 
 
 def load_flann_library():
+    """
+    CommandLine:
+        python -c "import pyflann" --verbose
+    """
+    from os.path import join, abspath, dirname, exists, normpath
+    # flann_lib_path = os.environ.get('FLANN_LIBRARY_PATH', None)
 
-    root_dir = os.path.abspath(os.path.dirname(__file__))
+    tried_paths = []
 
-    attempts = []
+    verbose = '--verbose' in sys.argv
+    verbose |= '--veryverbose' in sys.argv
+    verbose |= '--very-verbose' in sys.argv
+    verbose |= '--verbflann' in sys.argv
+    verbose |= '--verb-flann' in sys.argv
 
-    def try_lib(libpath):
-        attempts.append(libpath)
-        flannlib = cdll[libpath]
-        return (flannlib, libpath)
-
-    libnames = ['libflann.so']
-    libdir = 'lib'
     if sys.platform == 'win32':
-        libnames = ['flann.dll', 'libflann.dll']
+        possible_libnames = ['flann.dll', 'libflann.dll']
     elif sys.platform == 'darwin':
-        libnames = ['libflann.dylib']
+        possible_libnames = ['libflann.dylib']
+    else:
+        possible_libnames = ['libflann.so']
 
-    while root_dir is not None:
-        for libname in libnames:
-            try:
-                libpath = os.path.join(root_dir, libdir, libname)
-                return try_lib(libpath)
-            except Exception:
-                pass
-            try:
-                libpath = os.path.join(root_dir, 'build', libdir, libname)
-                return try_lib(libpath)
-            except Exception:
-                pass
-        tmp = os.path.dirname(root_dir)
-        if tmp == root_dir:
-            root_dir = None
-        else:
-            root_dir = tmp
+    # FIXME; this should really be @LIBRARY_OUTPUT_DIRECTORY@
 
-    # if we didn't find the library so far, try loading without
-    # a full path as a last resort
-    for libname in libnames:
+    if verbose:
+        print('[flann] Loading FLANN shared library')
+
+    def get_plat_specifier():
+        """
+        Standard platform specifier used by distutils
+        """
+        import distutils
+        plat_name = distutils.util.get_platform()
+        plat_specifier = ".%s-%s" % (plat_name, sys.version[0:3])
+        if hasattr(sys, 'gettotalrefcount'):
+            plat_specifier += '-pydebug'
+        return plat_specifier
+
+    possible_subdirs = []
+
+    try:
+        # FIXME: this should be put in src dir by cmake scripts
+        distutils_libdir = join(
+            'build', 'lib' + get_plat_specifier(), 'pyflann', 'lib')
+        possible_subdirs.append(distutils_libdir)
+
+        distutils_libdir = join(
+            'cmake_builds', 'build' + get_plat_specifier(), 'lib')
+        possible_subdirs.append(distutils_libdir)
+    except Exception:
+        distutils_libdir = join('build', 'lib', 'pyflann', 'lib')
+
+    possible_subdirs.append(join('build', 'lib', 'pyflann', 'lib'))
+    possible_subdirs.append('lib')
+    possible_subdirs.append('build/lib')
+
+    if True:
+        # Exhaustive checks to find library
+        def gen_possible_libpaths():
+            root_dir = abspath(dirname(__file__))
+            while root_dir is not None:
+                for subdir in possible_subdirs:
+                    for libname in possible_libnames:
+                        libpath = normpath(join(root_dir, subdir, libname))
+                        yield libpath
+                tmp = dirname(root_dir)
+                if tmp == root_dir:
+                    root_dir = None
+                else:
+                    root_dir = tmp
+        possible_libpaths = gen_possible_libpaths()
+    else:
+        # Specific checks to find library
+        root_dir = abspath(dirname(__file__))
+        possible_libpaths = [
+            normpath(join(libdir, libname))
+            for libname in possible_libnames
+            for libdir in [
+                join(dirname(root_dir), distutils_libdir),
+                join(root_dir, 'lib'),
+                join(root_dir, '.'),
+                # join(root_dir, '../../../build/lib'),
+                # join(root_dir, 'build/lib'),
+                # join(root_dir, '.'),
+            ]
+        ]
+
+    flannlib = None
+    for libpath in possible_libpaths:
+        if verbose:
+            print('[flann] Trying %s' % (libpath,))
+        tried_paths.append(libpath)
         try:
-            libpath = libname
-            return try_lib(libpath)
+            flannlib = cdll[libpath]
         except Exception:
-            pass
+            flannlib = None
+            if exists(libpath):
+                if verbose:
+                    print('[flann]... exists! CDLL error!')
+                raise
+            else:
+                if verbose:
+                    print('[flann] ... does not exist')
+        else:
+            if verbose:
+                print('[flann] ... exists')
+            break
 
-    print('attempts = '.format('\n'.join(attempts)))
-    raise ImportError('Failed to load dynamic library. Did you compile FLANN?')
+    if flannlib is None:
+        # if we didn't find the library so far, try loading
+        # using a relative path as a last resort
+        for libpath in possible_libnames:
+            try:
+                if verbose:
+                    print('[flann] Trying to fallback on %s' % (libpath,))
+                tried_paths.append(libpath)
+                flannlib = cdll[libpath]
+                break
+            except Exception:
+                flannlib = None
 
-    return None, None
+    if flannlib is None:
+        raise ImportError('Cannot load FLANN library. Did you compile FLANN?')
+    elif verbose:
+        print('[flann] Using %r' % (flannlib,))
+    return flannlib
 
-flannlib, libpath = load_flann_library()
-if flannlib is None:
-    raise ImportError('Cannot load dynamic library. Did you compile FLANN?')
+flannlib = load_flann_library()
 
 
 class FlannLib(object):
@@ -221,9 +301,21 @@ type_mappings = ( ('float', 'float32'),
                   ('int', 'int32') )
 
 
-def define_functions(str):
-    for type in type_mappings:
-        eval(compile(str % {'C': type[0], 'numpy': type[1]}, '<string>', 'exec'))
+def define_functions(fmtstr):
+    try:
+        for type_ in type_mappings:
+            source = fmtstr % {'C': type_[0], 'numpy': type_[1]}
+            code = compile(source, '<string>', 'exec')
+            eval(code)
+    except AttributeError:
+        print('+=========')
+        print('Error compling code')
+        print('+ format string ---------')
+        print(fmtstr)
+        print('+ failing instance ---------')
+        print(source)
+        print('L_________')
+        raise
 
 flann.build_index = {}
 define_functions(r"""
@@ -237,6 +329,40 @@ flannlib.flann_build_index_%(C)s.argtypes = [
 ]
 flann.build_index[%(numpy)s] = flannlib.flann_build_index_%(C)s
 """)
+
+flann.used_memory = {}
+define_functions(r"""
+flannlib.flann_used_memory_%(C)s.restype = c_int
+flannlib.flann_used_memory_%(C)s.argtypes = [
+        FLANN_INDEX,  # index_ptr
+]
+flann.used_memory[%(numpy)s] = flannlib.flann_used_memory_%(C)s
+""")
+
+
+flann.add_points = {}
+define_functions(r"""
+flannlib.flann_add_points_%(C)s.restype = None
+flannlib.flann_add_points_%(C)s.argtypes = [
+        FLANN_INDEX, # index_id
+        ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
+        c_int, # rows
+        c_int, # rebuild_threshhold
+]
+flann.add_points[%(numpy)s] = flannlib.flann_add_points_%(C)s
+""")
+
+
+flann.remove_point = {}
+define_functions(r"""
+flannlib.flann_remove_point_%(C)s.restype = None
+flannlib.flann_remove_point_%(C)s.argtypes = [
+        FLANN_INDEX,  # index_ptr
+        c_int,  # id_
+]
+flann.remove_point[%(numpy)s] = flannlib.flann_remove_point_%(C)s
+""")
+
 
 flann.save_index = {}
 define_functions(r"""
@@ -258,38 +384,6 @@ flannlib.flann_load_index_%(C)s.argtypes = [
         c_int,  # cols
 ]
 flann.load_index[%(numpy)s] = flannlib.flann_load_index_%(C)s
-""")
-
-flann.used_memory = {}
-define_functions(r"""
-flannlib.flann_used_memory_%(C)s.restype = c_int
-flannlib.flann_used_memory_%(C)s.argtypes = [
-        FLANN_INDEX, # index_id
-]
-flann.used_memory[%(numpy)s] = flannlib.flann_used_memory_%(C)s
-""")
-
-flann.add_points = {}
-define_functions(r"""
-flannlib.flann_add_points_%(C)s.restype = None
-flannlib.flann_add_points_%(C)s.argtypes = [
-        FLANN_INDEX, # index_id
-        ndpointer(%(numpy)s, ndim = 2, flags='aligned, c_contiguous'), # dataset
-        c_int, # rows
-        c_int, # cols
-        c_float, # rebuild_threshhold
-]
-flann.add_points[%(numpy)s] = flannlib.flann_add_points_%(C)s
-""")
-
-flann.remove_point = {}
-define_functions(r"""
-flannlib.flann_remove_point_%(C)s.restype = None
-flannlib.flann_remove_point_%(C)s.argtypes = [
-        FLANN_INDEX, # index_id
-        c_uint, # point_id
-]
-flann.remove_point[%(numpy)s] = flannlib.flann_remove_point_%(C)s
 """)
 
 flann.find_nearest_neighbors = {}
