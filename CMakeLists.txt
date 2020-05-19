@@ -1,36 +1,39 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.13.0)
+set (CMAKE_CXX_STANDARD 11)
+
 
 if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-# Clang2 = Clang + OpenMP built for OSX Mavericks
-# http://goo.gl/1Tg0Zj
-if (APPLE)
-    message("Detected APPLE system")
-    SET(CLANG2 Off)
-endif()
-
-if (APPLE AND CLANG2)
-    message("Using clang2")
-    set(CMAKE_C_COMPILER "clang2")
-    set(CMAKE_CXX_COMPILER "clang2++")
-endif()
-
-project(flann)
+project(flann_ibeis LANGUAGES C CXX)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
-include(${PROJECT_SOURCE_DIR}/cmake/flann_utils.cmake)
-set(FLANN_VERSION 1.8.4)
+include(${PROJECT_SOURCE_DIR}/CMake/flann_utils.cmake)
+
+function(_pycmd outvar cmd)
+  execute_process(
+    COMMAND python -c "${cmd}"
+    RESULT_VARIABLE _exitcode
+    OUTPUT_VARIABLE _output
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+  if(NOT ${_exitcode} EQUAL 0)
+    message(ERROR "Failed when running python code: \"\"\"
+${cmd}\"\"\"")
+    message(FATAL_ERROR "Python command failed with error code: ${_exitcode}")
+  endif()
+  # Remove supurflous newlines (artifacts of print)
+  string(STRIP "${_output}" _output)
+  set(${outvar} "${_output}" PARENT_SCOPE)
+endfunction()
+_pycmd(FLANN_IBEIS_VERSION "import setup; print(setup.version)")
+
+message(STATUS "FLANN_IBEIS_VERSION = ${FLANN_IBEIS_VERSION}")
+
 DISSECT_VERSION()
 GET_OS_INFO()
 
-if (APPLE)
-    #MacPorts
-    message("USING MACPORTS")
-    include_directories(/opt/local/include)
-    link_directories(/opt/local/lib)
-endif()
 
 # detect if using the Clang compiler
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
@@ -41,19 +44,10 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_COMPILER_IS_CLANGXX 1)
 endif ()
 
-if(APPLE AND CLANG2)
-    # Add flags to support clang2
-    message("APPLE + CLANG2: Adding libc flags for clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lc++")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lc++")
-endif()
-
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Add an "uninstall" target
-CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/cmake/uninstall_target.cmake.in"
+CONFIGURE_FILE ("${PROJECT_SOURCE_DIR}/CMake/uninstall_target.cmake.in"
     "${PROJECT_BINARY_DIR}/uninstall_target.cmake" IMMEDIATE @ONLY)
 ADD_CUSTOM_TARGET (uninstall "${CMAKE_COMMAND}" -P
     "${PROJECT_BINARY_DIR}/uninstall_target.cmake")
@@ -71,29 +65,13 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 #set the default path for built executables to the "bin" directory
-# TODO: replace with RUNTIME_OUTPUT_DIRECTORY
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-
-#if ( MSVC )
-if(CMAKE_C_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    # Make windows have the same behavior as unix in where it puts the libraries
-    message("DOING MS VISUAL STUDIO MSVC")
-    set(LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LIBRARY_OUTPUT_DIRECTORY} )
-    set(LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBRARY_OUTPUT_DIRECTORY} )
-    set(LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${LIBRARY_OUTPUT_DIRECTORY} )
-    set(LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${LIBRARY_OUTPUT_DIRECTORY} )
-endif()
-#endif ( MSVC )
-
 # set output path for tests
 set(TEST_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/test)
 
 option(BUILD_C_BINDINGS "Build C bindings" ON)
-option(BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
-option(BUILD_MATLAB_BINDINGS "Build Matlab bindings" ON)
 option(BUILD_CUDA_LIB "Build CUDA library" OFF)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_TESTS "Build tests" ON)
@@ -104,16 +82,12 @@ option(USE_MPI "Use MPI" OFF)
 set(NVCC_COMPILER_BINDIR "" CACHE PATH  "Directory where nvcc should look for C++ compiler. This is passed to nvcc through the --compiler-bindir option.")
 
 if (NOT BUILD_C_BINDINGS)
-    set(BUILD_PYTHON_BINDINGS OFF)
     set(BUILD_MATLAB_BINDINGS OFF)
+    if (SKBUILD)
+      message(FATAL_ERROR "Python bindings requires C_BINDINGS=ON")
+    endif()
 endif()
 
-
-# find python
-find_package(PythonInterp)
-if (NOT PYTHON_EXECUTABLE)
-    set(BUILD_PYTHON_BINDINGS OFF)
-endif()
 
 find_hdf5()
 if (NOT HDF5_FOUND)
@@ -154,22 +128,16 @@ if (USE_MPI AND HDF5_IS_PARALLEL)
 endif()
 
 
-find_package(GTest)
-if (NOT GTEST_FOUND)
-	message(WARNING "gtest library not found, some tests will not be run")
+if (USE_OPENMP)
+    find_package(OpenMP)
+    if(OPENMP_FOUND)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    else()
+        message(WARNING "OpenMP NOT found")
+    endif()
 endif()
-
-find_package(OpenMP)
-IF(OPENMP_FOUND)
-    message("Found OpenMP! ^_^")
-    # add flags for OpenMP
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_C_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_C_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-ELSE()
-    message("Missed OpenMP! x_x")
-ENDIF()
 
 
 # CUDA support
@@ -184,6 +152,9 @@ if (BUILD_CUDA_LIB)
     endif(CUDA_FOUND)
 endif(BUILD_CUDA_LIB)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LZ4 REQUIRED liblz4)
+
 #set the C/C++ include path to the "include" directory
 include_directories(BEFORE ${PROJECT_SOURCE_DIR}/src/cpp)
 
@@ -197,7 +168,23 @@ else()
     add_definitions( "-Wall -Wno-unknown-pragmas -Wno-unused-function" )
 endif()
 
-add_subdirectory( cmake )
+# install and export variables
+set(config_install_dir "lib/CMake/${PROJECT_NAME}")
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(version_config "${generated_dir}/flann-config-version.cmake")
+set(project_config "${generated_dir}/flann-config.cmake")
+set(targets_export_name "flann-targets")
+set(namespace "flann::")
+
+if (SKBUILD)
+  # Override output paths when using scikit-build
+  set(FLANN_LIB_INSTALL_DIR "pyflann_ibeis/lib")
+  set(FLANN_INCLUDE_INSTALL_DIR "pyflann_ibeis/include")
+endif()
+
+if (NOT SKBUILD)
+  add_subdirectory( CMake )
+endif()
 add_subdirectory( src )
 if (BUILD_EXAMPLES)
   add_subdirectory( examples )
@@ -205,9 +192,45 @@ endif(BUILD_EXAMPLES)
 if (BUILD_TESTS)
   add_subdirectory( test )
 endif (BUILD_TESTS)
-if (BUILD_DOC)
-  add_subdirectory( doc )
-endif (BUILD_DOC)
+
+# CMake configuration file creation
+# Include module with fuction 'write_basic_package_version_file'
+include(CMakePackageConfigHelpers)
+
+# Configure 'flann-config-version.cmake'
+# Note: FLANN_IBEIS_VERSION is used as a VERSION
+write_basic_package_version_file(
+    "${version_config}"
+    VERSION ${FLANN_IBEIS_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+# Configure 'flann-config.cmake'
+# Use variables:
+#   * targets_export_name
+#   * PROJECT_NAME
+configure_package_config_file(
+  "CMake/Config.cmake.in"
+    "${project_config}"
+    INSTALL_DESTINATION "${config_install_dir}"
+)
+
+if (NOT SKBUILD)
+  # Config
+  #   * <prefix>/lib/CMake/flann/flann-config.cmake
+  #   * <prefix>/lib/CMake/flann/flann-config-version.cmake
+  install(
+      FILES "${project_config}" "${version_config}"
+      DESTINATION "${config_install_dir}"
+  )
+  # Config
+  #   * <prefix>/lib/CMake/flann/flann-targets.cmake
+  install(
+      EXPORT "${targets_export_name}"
+      NAMESPACE "${namespace}"
+      DESTINATION "${config_install_dir}"
+  )
+endif()
 
 
 # CPACK options
@@ -240,10 +263,10 @@ set(CPACK_SET_DESTDIR ON)
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_CONTACT "Marius Muja")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-SET(CPACK_PACKAGE_VERSION ${FLANN_VERSION})
-SET(CPACK_PACKAGE_VERSION_MAJOR ${FLANN_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${FLANN_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${FLANN_VERSION_PATCH})
+SET(CPACK_PACKAGE_VERSION ${FLANN_IBEIS_VERSION})
+SET(CPACK_PACKAGE_VERSION_MAJOR ${FLANN_IBEIS_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${FLANN_IBEIS_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${FLANN_IBEIS_VERSION_PATCH})
 include(CPack)
 
 
@@ -253,7 +276,6 @@ message(STATUS "Building C bindings: ${BUILD_C_BINDINGS}")
 message(STATUS "Building examples: ${BUILD_EXAMPLES}")
 message(STATUS "Building tests: ${BUILD_TESTS}")
 message(STATUS "Building documentation: ${BUILD_DOC}")
-message(STATUS "Building python bindings: ${BUILD_PYTHON_BINDINGS}")
 message(STATUS "Building matlab bindings: ${BUILD_MATLAB_BINDINGS}")
 message(STATUS "Building CUDA library: ${BUILD_CUDA_LIB}")
 message(STATUS "Using OpenMP support: ${USE_OPENMP}")

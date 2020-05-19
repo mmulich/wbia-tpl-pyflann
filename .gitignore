@@ -22,13 +22,5 @@ test/flann_uint_autotune.py
 flann.kdev4
 TODO
 
-#CMakeCache.txt
-#CMakeFiles/
-#build
-#build_win
-#dist/
-cmake-builds
-
-src/python/setup.py
-src/python/dist/
-src/python/flann.egg-info/
+_skbuild
+pyflann.egg-info
