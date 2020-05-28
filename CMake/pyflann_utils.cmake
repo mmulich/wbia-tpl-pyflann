@@ -3,22 +3,22 @@ macro(GET_OS_INFO)
     string(REGEX MATCH "Darwin" OS_IS_MACOS ${CMAKE_SYSTEM_NAME})
     set(FLANN_LIB_INSTALL_DIR "lib${LIB_SUFFIX}")
     set(FLANN_INCLUDE_INSTALL_DIR
-        "include/${PROJECT_NAME_LOWER}-${FLANN_MAJOR_VERSION}.${FLANN_MINOR_VERSION}")
+        "include/${PROJECT_NAME_LOWER}-${PYFLANN_MAJOR_VERSION}.${PYFLANN_MINOR_VERSION}")
 endmacro(GET_OS_INFO)
 
 
 macro(DISSECT_VERSION)
     # Find version components
-    message(STATUS "FLANN_IBEIS_VERSION = ${FLANN_IBEIS_VERSION}")
+    message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
     string(REGEX REPLACE "^([0-9]+).*" "\\1"
-        FLANN_IBEIS_VERSION_MAJOR "${FLANN_IBEIS_VERSION}")
+        PYFLANN_VERSION_MAJOR "${PYFLANN_VERSION}")
     string(REGEX REPLACE "^[0-9]+\\.([0-9]+).*" "\\1"
-        FLANN_IBEIS_VERSION_MINOR "${FLANN_IBEIS_VERSION}")
+        PYFLANN_VERSION_MINOR "${PYFLANN_VERSION}")
     string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+)" "\\1"
-        FLANN_IBEIS_VERSION_PATCH ${FLANN_IBEIS_VERSION})
+        PYFLANN_VERSION_PATCH ${PYFLANN_VERSION})
     string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.[0-9]+(.*)" "\\1"
-        FLANN_IBEIS_VERSION_CANDIDATE ${FLANN_IBEIS_VERSION})
-    set(FLANN_SOVERSION "${FLANN_IBEIS_VERSION_MAJOR}.${FLANN_IBEIS_VERSION_MINOR}")
+        PYFLANN_VERSION_CANDIDATE ${PYFLANN_VERSION})
+    set(FLANN_SOVERSION "${PYFLANN_VERSION_MAJOR}.${PYFLANN_VERSION_MINOR}")
     message(STATUS "FLANN_SOVERSION = ${FLANN_SOVERSION}")
 endmacro(DISSECT_VERSION)
 
@@ -49,7 +49,7 @@ macro(flann_add_gtest exe)
     add_executable(${exe} EXCLUDE_FROM_ALL ${ARGN})
     target_link_libraries(${exe} ${GTEST_LIBRARIES})
     # add dependency to 'tests' target
-    add_dependencies(flann_gtests ${exe})
+    add_dependencies(pyflann_gtests ${exe})
 
     # add target for running test
     string(REPLACE "/" "_" _testname ${exe})
@@ -61,8 +61,9 @@ macro(flann_add_gtest exe)
                     VERBATIM
                     COMMENT "Runnint gtest test(s) ${exe}")
     # add dependency to 'test' target
-    add_dependencies(flann_gtest test_${_testname})
+    add_dependencies(pyflann_gtest test_${_testname})
 endmacro(flann_add_gtest)
+
 
 macro(flann_add_cuda_gtest exe)
     # add build target
@@ -84,7 +85,8 @@ macro(flann_add_cuda_gtest exe)
     add_dependencies(test test_${_testname})
 endmacro(flann_add_cuda_gtest)
 
-macro(flann_add_pyunit file)
+
+macro(pyflann_add_pyunit file)
     # find test file
     set(_file_name _file_name-NOTFOUND)
     find_file(_file_name ${file} ${CMAKE_CURRENT_SOURCE_DIR})
@@ -103,11 +105,10 @@ macro(flann_add_pyunit file)
     # add dependency to 'test' target
     add_dependencies(pyunit_${_testname} flann)
     add_dependencies(test pyunit_${_testname})
-endmacro(flann_add_pyunit)
+endmacro(pyflann_add_pyunit)
 
 
-
-macro(flann_download_test_data _name _md5)
+macro(pyflann_download_test_data _name _md5)
     string(REPLACE "/" "_" _dataset_name dataset_${_name})
 
     add_custom_target(${_dataset_name}
@@ -116,5 +117,4 @@ macro(flann_download_test_data _name _md5)
 
     # Also make sure that downloads are done before we run any tests
     add_dependencies(tests ${_dataset_name})
-
-endmacro(flann_download_test_data)
+endmacro(pyflann_download_test_data)

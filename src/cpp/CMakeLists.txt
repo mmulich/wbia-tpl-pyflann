@@ -1,11 +1,11 @@
 #include_directories(${CMAKE_SOURCE_DIR}/include algorithms ext util nn .)
 
-message(STATUS "FLANN_IBEIS_VERSION = ${FLANN_IBEIS_VERSION}")
-set(FLANN_VERSION ${FLANN_IBEIS_VERSION})
+message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
+set(FLANN_VERSION ${PYFLANN_VERSION})
 message(STATUS "FLANN_VERSION = ${FLANN_VERSION}")
-add_definitions(-D_FLANN_IBEIS_VERSION=${FLANN_IBEIS_VERSION})
-add_definitions(-DFLANN_IBEIS_VERSION_=${FLANN_IBEIS_VERSION})
-add_definitions(-DFLANN_IBEIS_VERSION=${FLANN_IBEIS_VERSION})
+add_definitions(-D_PYFLANN_VERSION=${PYFLANN_VERSION})
+add_definitions(-DPYFLANN_VERSION_=${PYFLANN_VERSION})
+add_definitions(-DPYFLANN_VERSION=${PYFLANN_VERSION})
 add_definitions(-D_FLANN_VERSION=${FLANN_VERSION})
 add_definitions(-DFLANN_VERSION_=${FLANN_VERSION})
 add_definitions(-DFLANN_VERSION=${FLANN_VERSION})
@@ -72,14 +72,14 @@ else()
 endif()
 
 set_target_properties(flann_cpp PROPERTIES
-   VERSION ${FLANN_IBEIS_VERSION}
+   VERSION ${PYFLANN_VERSION}
    SOVERSION ${FLANN_SOVERSION}
    DEFINE_SYMBOL FLANN_EXPORTS
 )
 
 if (BUILD_CUDA_LIB)
     set_target_properties(flann_cuda PROPERTIES
-       VERSION ${FLANN_IBEIS_VERSION}
+       VERSION ${PYFLANN_VERSION}
        SOVERSION ${FLANN_SOVERSION}
        DEFINE_SYMBOL FLANN_EXPORTS
     )
@@ -119,10 +119,10 @@ if (BUILD_C_BINDINGS)
         endif()
     endif()
 
-    message(STATUS "FLANN_IBEIS_VERSION = ${FLANN_IBEIS_VERSION}")
+    message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
     message(STATUS "FLANN_SOVERSION = ${FLANN_SOVERSION}")
     set_target_properties(flann PROPERTIES
-       VERSION ${FLANN_IBEIS_VERSION}
+       VERSION ${PYFLANN_VERSION}
        SOVERSION ${FLANN_SOVERSION}
        DEFINE_SYMBOL FLANN_EXPORTS
     )
@@ -130,54 +130,54 @@ endif()
 
 
 if(NOT SKBUILD)
-# Skip this part if running via setup.py
+    # Skip this part if running via setup.py
 
-if(WIN32)
-if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
+    if(WIN32)
+    if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
+        install (
+            TARGETS flann
+            RUNTIME DESTINATION share/flann/matlab
+        )
+    endif()
+    endif(WIN32)
+
+
     install (
-        TARGETS flann
-        RUNTIME DESTINATION share/flann/matlab
-    )
-endif()
-endif(WIN32)
-
-
-install (
-    TARGETS flann_cpp flann_cpp_s
-    EXPORT ${targets_export_name}
-    INCLUDES DESTINATION include
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
-    ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
-)
-
-if (BUILD_CUDA_LIB)
-    install (
-        TARGETS flann_cuda flann_cuda_s
+        TARGETS flann_cpp flann_cpp_s
         EXPORT ${targets_export_name}
         INCLUDES DESTINATION include
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
     )
-endif()
 
-if (BUILD_C_BINDINGS)
+    if (BUILD_CUDA_LIB)
+        install (
+            TARGETS flann_cuda flann_cuda_s
+            EXPORT ${targets_export_name}
+            INCLUDES DESTINATION include
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
+            ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        )
+    endif()
+
+    if (BUILD_C_BINDINGS)
+        install (
+            TARGETS flann flann_s
+            EXPORT ${targets_export_name}
+            INCLUDES DESTINATION include
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
+            ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        )
+    endif()
+
     install (
-        TARGETS flann flann_s
-        EXPORT ${targets_export_name}
-        INCLUDES DESTINATION include
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
-        ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        DIRECTORY flann
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
     )
-endif()
-
-install (
-    DIRECTORY flann
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-)
 
 else()
     # Only install the library files when building with skbuild

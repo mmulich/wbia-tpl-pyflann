@@ -6,10 +6,10 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-project(flann_ibeis LANGUAGES C CXX)
+project(pyflann_ibeis LANGUAGES C CXX)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
-include(${PROJECT_SOURCE_DIR}/CMake/flann_utils.cmake)
+include(${PROJECT_SOURCE_DIR}/CMake/pyflann_utils.cmake)
 
 function(_pycmd outvar cmd)
   execute_process(
@@ -27,9 +27,9 @@ ${cmd}\"\"\"")
   string(STRIP "${_output}" _output)
   set(${outvar} "${_output}" PARENT_SCOPE)
 endfunction()
-_pycmd(FLANN_IBEIS_VERSION "import setup; print(setup.version)")
+_pycmd(PYFLANN_VERSION "import setup; print(setup.version)")
 
-message(STATUS "FLANN_IBEIS_VERSION = ${FLANN_IBEIS_VERSION}")
+message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
 
 DISSECT_VERSION()
 GET_OS_INFO()
@@ -189,10 +189,10 @@ endif()
 # install and export variables
 set(config_install_dir "lib/CMake/${PROJECT_NAME}")
 set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
-set(version_config "${generated_dir}/flann-config-version.cmake")
-set(project_config "${generated_dir}/flann-config.cmake")
-set(targets_export_name "flann-targets")
-set(namespace "flann::")
+set(version_config "${generated_dir}/pyflann-config-version.cmake")
+set(project_config "${generated_dir}/pyflann-config.cmake")
+set(targets_export_name "pyflann-targets")
+set(namespace "pyflann::")
 
 if (SKBUILD)
   # Override output paths when using scikit-build
@@ -216,10 +216,10 @@ endif (BUILD_TESTS)
 include(CMakePackageConfigHelpers)
 
 # Configure 'flann-config-version.cmake'
-# Note: FLANN_IBEIS_VERSION is used as a VERSION
+# Note: PYFLANN_VERSION is used as a VERSION
 write_basic_package_version_file(
     "${version_config}"
-    VERSION ${FLANN_IBEIS_VERSION}
+    VERSION ${PYFLANN_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
@@ -281,10 +281,10 @@ set(CPACK_SET_DESTDIR ON)
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_CONTACT "Marius Muja")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-SET(CPACK_PACKAGE_VERSION ${FLANN_IBEIS_VERSION})
-SET(CPACK_PACKAGE_VERSION_MAJOR ${FLANN_IBEIS_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${FLANN_IBEIS_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${FLANN_IBEIS_VERSION_PATCH})
+SET(CPACK_PACKAGE_VERSION ${PYFLANN_VERSION})
+SET(CPACK_PACKAGE_VERSION_MAJOR ${PYFLANN_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${PYFLANN_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${PYFLANN_VERSION_PATCH})
 include(CPack)
 
 
