@@ -10,7 +10,7 @@ pip install -U scikit-build cmake lz4
 
 ./clean.sh
 
-python seetup.py cleen
+python setup.py clean
 python setup.py build_ext --inplace
 python setup.py develop
 pip install -e .
