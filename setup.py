@@ -161,23 +161,23 @@ except Exception:
     raise RuntimeError('FAILED TO ADD BUILD CONSTRUCTS')
 
 
-NAME = 'pyflann_ibeis'
+NAME = 'wbia-pyflann'
 
 
 MB_PYTHON_TAG = native_mb_python_tag()  # NOQA
 VERSION = version = parse_version('pyflann_ibeis/__init__.py')  # must be global for git tags
 
-AUTHORS = ['Jon Crall', 'Marius Muja']
-AUTHOR_EMAIL = 'erotemic@gmail.com'
-URL = 'https://github.com/Erotemic/pyflann_ibeis'
+AUTHORS = ', '.join(['Jon Crall', 'Marius Muja', 'WildMe Developers'])
+AUTHOR_EMAIL = 'dev@wildme.org'
+URL = 'https://github.com/WildbookOrg/flann'
 LICENSE = 'BSD'
-DESCRIPTION = 'FLANN (for IBEIS) - Fast Library for Approximate Nearest Neighbors'
+DESCRIPTION = 'FLANN - Fast Library for Approximate Nearest Neighbors'
 
 
 KWARGS = OrderedDict(
     name=NAME,
     version=VERSION,
-    author=', '.join(AUTHORS),
+    author=AUTHORS,
     author_email=AUTHOR_EMAIL,
     description=DESCRIPTION,
     long_description=parse_long_description('README.rst'),
