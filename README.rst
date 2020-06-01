@@ -1,7 +1,7 @@
-|ReadTheDocs| |Pypi| |Downloads| |Codecov| |CircleCI| |Travis| |Appveyor| 
+|Pypi| |Travis|
 
 
-This is a Fork of the FLANN repo, under a different name for use in the IBEIS
+This is a Fork of the FLANN repo, under a different name for use in the Wildbook
 project. The main difference is that it has a few more helper function calls
 and it should be easier build wheels and to pip install.
 
@@ -38,24 +38,9 @@ Conditions of use
 
 FLANN is distributed under the terms of the [BSD License](https://github.com/mariusmuja/flann/blob/master/COPYING).
 
-Bug reporting
--------------
 
-Please report bugs or feature requests using [github's issue tracker](http://github.com/mariusmuja/flann/issues).
-
-
-.. |CircleCI| image:: https://circleci.com/gh/Erotemic/pyflann_ibeis.svg?style=svg
-    :target: https://circleci.com/gh/Erotemic/pyflann_ibeis
-.. |Travis| image:: https://img.shields.io/travis/Erotemic/pyflann_ibeis/master.svg?label=Travis%20CI
-   :target: https://travis-ci.org/Erotemic/pyflann_ibeis?branch=master
-.. |Appveyor| image:: https://ci.appveyor.com/api/projects/status/github/Erotemic/pyflann_ibeis?branch=master&svg=True
-   :target: https://ci.appveyor.com/project/Erotemic/pyflann_ibeis/branch/master
-.. |Codecov| image:: https://codecov.io/github/Erotemic/pyflann_ibeis/badge.svg?branch=master&service=github
-   :target: https://codecov.io/github/Erotemic/pyflann_ibeis?branch=master
-.. |Pypi| image:: https://img.shields.io/pypi/v/pyflann_ibeis.svg
-   :target: https://pypi.python.org/pypi/pyflann_ibeis
-.. |Downloads| image:: https://img.shields.io/pypi/dm/pyflann_ibeis.svg
-   :target: https://pypistats.org/packages/pyflann_ibeis
-.. |ReadTheDocs| image:: https://readthedocs.org/projects/pyflann_ibeis/badge/?version=latest
-    :target: http://pyflann_ibeis.readthedocs.io/en/latest/
+.. |Travis| image:: https://img.shields.io/travis/WildbookOrg/wbia-pyflann/master.svg?label=Travis%20CI
+   :target: https://travis-ci.org/WildbookOrg/wbia-pyflann?branch=master
+.. |Pypi| image:: https://img.shields.io/pypi/v/wbia-pyflann.svg
+   :target: https://pypi.python.org/pypi/wbia-pyflann
 
