@@ -49,7 +49,7 @@ def native_mb_python_tag(plat_impl=None, version_info=None):
     return mb_tag
 
 
-def parse_version(fpath='pyflann_ibeis/__init__.py'):
+def parse_version(fpath):
     """
     Statically parse the version number from a python file
 
@@ -165,7 +165,7 @@ NAME = 'wbia-pyflann'
 
 
 MB_PYTHON_TAG = native_mb_python_tag()  # NOQA
-VERSION = version = parse_version('pyflann_ibeis/__init__.py')  # must be global for git tags
+VERSION = version = parse_version('pyflann/__init__.py')  # must be global for git tags
 
 AUTHORS = ', '.join(['Jon Crall', 'Marius Muja', 'WildMe Developers'])
 AUTHOR_EMAIL = 'dev@wildme.org'
@@ -197,15 +197,15 @@ KWARGS = OrderedDict(
     # know that the cmake installed files belong in the pyflann module and
     # not the data directory.
     packages=[
-        'pyflann_ibeis',
+        'pyflann',
         # These are generated modules that will be created via build
-        'pyflann_ibeis.lib',
+        'pyflann.lib',
     ],
     package_dir={
-        'pyflann_ibeis': 'pyflann_ibeis',
+        'pyflann': 'pyflann',
         # Note: this requires that FLANN_LIB_INSTALL_DIR is set to pyflann/lib
         # in the src/cpp/CMakeLists.txt
-        'pyflann_ibeis.lib': 'pyflann_ibeis/lib',
+        'pyflann.lib': 'pyflann/lib',
     },
     include_package_data=False,
     # List of classifiers available at:
@@ -238,7 +238,7 @@ KWARGS = OrderedDict(
 
 if __name__ == '__main__':
     """
-    python -c "import pyflann_ibeis; print(pyflann_ibeis.__file__)"
+    python -c "import pyflann; print(pyflann.__file__)"
     """
     import skbuild
     skbuild.setup(**KWARGS)

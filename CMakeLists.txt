@@ -6,7 +6,7 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0042 NEW)
 endif(COMMAND cmake_policy)
 
-project(pyflann_ibeis LANGUAGES C CXX)
+project(pyflann LANGUAGES C CXX)
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
 include(${PROJECT_SOURCE_DIR}/CMake/pyflann_utils.cmake)
@@ -198,8 +198,8 @@ set(namespace "pyflann::")
 
 if (SKBUILD)
   # Override output paths when using scikit-build
-  set(FLANN_LIB_INSTALL_DIR "pyflann_ibeis/lib")
-  set(FLANN_INCLUDE_INSTALL_DIR "pyflann_ibeis/include")
+  set(FLANN_LIB_INSTALL_DIR "pyflann/lib")
+  set(FLANN_INCLUDE_INSTALL_DIR "pyflann/include")
 endif()
 
 if (NOT SKBUILD)

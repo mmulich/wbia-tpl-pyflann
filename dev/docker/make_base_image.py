@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Create a base docker image for building pyflann_ibeis
+Create a base docker image for building pyflann
 """
 from __future__ import absolute_import, division, print_function
 import os

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from pyflann_ibeis import FLANN
+from pyflann import FLANN
 import unittest
 import numpy as np
 

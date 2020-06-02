@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import pyflann_ibeis
+import pyflann
 import numpy as np
 from numpy import ones
 from numpy.random import rand
@@ -10,7 +10,7 @@ import unittest
 class Test_PyFLANN_nn(unittest.TestCase):
 
     def setUp(self):
-        self.nn = pyflann_ibeis.FLANN()
+        self.nn = pyflann.FLANN()
 
 
 class Test_PyFLANN_nn_index(unittest.TestCase):
@@ -21,11 +21,11 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
         N = 100
 
         x = rand(N, dim)
-        nn = pyflann_ibeis.FLANN()
+        nn = pyflann.FLANN()
         nn.build_index(x)
 
         nnidx, nndist = nn.nn_index(x)
-        correct = all(nnidx == np.arange(N, dtype=pyflann_ibeis.index_type))
+        correct = all(nnidx == np.arange(N, dtype=pyflann.index_type))
 
         nn.delete_index()
         self.assertTrue(correct)
@@ -41,7 +41,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
         correct = ones(numtests, dtype=np.bool_)
 
         for i in np.random.permutation(numtests):
-            nns[i] = pyflann_ibeis.FLANN()
+            nns[i] = pyflann.FLANN()
             nns[i].build_index(x[i])
 
             # For kicks
@@ -52,7 +52,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
 
         for i in np.random.permutation(numtests):
             nnidx, nndist = nns[i].nn_index(x[i])
-            correct[i] = all(nnidx == np.arange(N, dtype=pyflann_ibeis.index_type))
+            correct[i] = all(nnidx == np.arange(N, dtype=pyflann.index_type))
 
         for i in reversed(range(numtests)):
             if rand() < 0.5:
@@ -64,19 +64,19 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
 
     @pytest.mark.skip('not debugging')
     def testnn_index_bad_index_call_noindex(self):
-        nn = pyflann_ibeis.FLANN()
+        nn = pyflann.FLANN()
         # self.assertRaises(FLANNException, lambda: nn.nn_index(rand(5, 5)))
         import pytest
-        with pytest.raises(pyflann_ibeis.FLANNException):
+        with pytest.raises(pyflann.FLANNException):
             nn.nn_index(rand(5, 5))
 
     @pytest.mark.skip('not debugging')
     def testnn_index_bad_index_call_delindex(self):
-        nn = pyflann_ibeis.FLANN()
+        nn = pyflann.FLANN()
         nn.build_index(rand(5, 5))
         nn.delete_index()
 
-        with pytest.raises(pyflann_ibeis.FLANNException):
+        with pytest.raises(pyflann.FLANNException):
             nn.nn_index(rand(5, 5))
         # self.assertRaises(FLANNException, lambda: nn.nn_index(rand(5, 5)))
 
