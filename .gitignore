@@ -1,15 +1,14 @@
-*.save
-.*
-tmp
-*.pyc
-*.pyo
-cmake-builds/*
-cmake_builds/*
-src/python/setup.py
-src/python/build
-src/matlab/*.dat
-src/matlab/test.m
+###
+# Development files
+###
+*.egg-info
+_skbuild
+pyflann/lib
 
+*.save
+flann.kdev4
+
+.coverage
 test/*.h5
 test/*.pkl
 test/*.idx
@@ -19,12 +18,12 @@ test/flann_multithreaded_test
 test/flann_simple_test
 test/flann_uint_autotune.py
 
-flann.kdev4
-TODO
 
-_skbuild
-pyflann.egg-info
-pyflann.egg-info
-pyflann/lib
-
+###
+# Build files
+###
 src/python
+cmake-builds/*
+tmp
+*.pyc
+*.pyo
