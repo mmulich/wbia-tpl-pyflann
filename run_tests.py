@@ -3,7 +3,7 @@
 if __name__ == '__main__':
     import pytest
     import sys
-    package_name = 'pyflann_ibeis'
+    package_name = 'pyflann'
     pytest_args = [
         '--cov-config', '.coveragerc',
         '--cov-report', 'html',

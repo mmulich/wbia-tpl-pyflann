@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from pyflann_ibeis import FLANN, index_type
+from pyflann import FLANN, index_type
 from numpy import arange
 from numpy.random import rand, randn
 import unittest

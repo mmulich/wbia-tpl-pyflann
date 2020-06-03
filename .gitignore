@@ -24,7 +24,7 @@ TODO
 
 _skbuild
 pyflann.egg-info
-pyflann_ibeis.egg-info
-pyflann_ibeis/lib
+pyflann.egg-info
+pyflann/lib
 
 src/python

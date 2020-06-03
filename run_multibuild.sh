@@ -20,10 +20,10 @@ notes:
         cd /io
         pip install -r requirements.txt
         pip install pygments
-        pip install wheelhouse/pyflann_ibeis-0.5.0-cp27-cp27mu-manylinux1_x86_64.whl
+        pip install wheelhouse/pyflann-0.5.0-cp27-cp27mu-manylinux1_x86_64.whl
 
         cd /
-        xdoctest pyflann_ibeis
+        xdoctest pyflann
         pytest io/tests
 
         cd /io
@@ -139,8 +139,8 @@ else
     chmod -R o+rw _skbuild
     chmod -R o+rw dist
 
-    auditwheel repair dist/pyflann_ibeis-*-$MB_PYTHON_TAG-*.whl
+    auditwheel repair dist/pyflann-*-$MB_PYTHON_TAG-*.whl
     chmod -R o+rw wheelhouse
 
-    chmod -R o+rw pyflann_ibeis.egg-info
+    chmod -R o+rw pyflann.egg-info
 fi
