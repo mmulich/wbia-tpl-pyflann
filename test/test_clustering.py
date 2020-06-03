@@ -6,7 +6,6 @@ import time
 
 
 class Test_PyFLANN_clustering(unittest.TestCase):
-
     def setUp(self):
         self.nn = FLANN(iterations=11)
 
@@ -50,26 +49,38 @@ class Test_PyFLANN_clustering(unittest.TestCase):
 
         # rnseed = int(time.time())
         centroids = self.nn.kmeans(
-            xc[np.random.permutation(len(xc))], N, centers_init="random", random_seed=2)
-        mindists = np.array([[sum((d1 - d2)**2) for d1 in x]
-                             for d2 in centroids]).min(0)
+            xc[np.random.permutation(len(xc))], N, centers_init="random", random_seed=2
+        )
+        mindists = np.array(
+            [[sum((d1 - d2) ** 2) for d1 in x] for d2 in centroids]
+        ).min(0)
         # print mindists
         for m in mindists:
             self.assertAlmostEqual(m, 0.0, 1)
 
         # rnseed = int(time.time())
         centroids = self.nn.kmeans(
-            xc[np.random.permutation(len(xc))], N, centers_init="gonzales", random_seed=2)
-        mindists = np.array([[sum((d1 - d2)**2) for d1 in x]
-                             for d2 in centroids]).min(0)
+            xc[np.random.permutation(len(xc))],
+            N,
+            centers_init="gonzales",
+            random_seed=2,
+        )
+        mindists = np.array(
+            [[sum((d1 - d2) ** 2) for d1 in x] for d2 in centroids]
+        ).min(0)
         # print mindists
         for m in mindists:
             self.assertAlmostEqual(m, 0.0, 1)
 
         centroids = self.nn.kmeans(
-            xc[np.random.permutation(len(xc))], N, centers_init="kmeanspp", random_seed=2)
-        mindists = np.array([[sum((d1 - d2)**2) for d1 in x]
-                             for d2 in centroids]).min(0)
+            xc[np.random.permutation(len(xc))],
+            N,
+            centers_init="kmeanspp",
+            random_seed=2,
+        )
+        mindists = np.array(
+            [[sum((d1 - d2) ** 2) for d1 in x] for d2 in centroids]
+        ).min(0)
         # print mindists
         for m in mindists:
             self.assertAlmostEqual(m, 0.0, 1)
@@ -80,7 +91,8 @@ class Test_PyFLANN_clustering(unittest.TestCase):
         self.setUp()
         """
         import pytest
-        pytest.skip('broken, but not worth fixing')
+
+        pytest.skip("broken, but not worth fixing")
 
         data = np.random.rand(1000, 2)  # Random, so we can get a lot of local minima
 
@@ -101,7 +113,7 @@ class Test_PyFLANN_clustering(unittest.TestCase):
         self.assertTrue(np.any(cl1 != cl2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     pytest ~/code/flann/test/test_clustering.py --verbose
     """
