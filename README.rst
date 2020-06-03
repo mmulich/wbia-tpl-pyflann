@@ -33,6 +33,17 @@ If you want to try out the latest changes or contribute to FLANN, then it's reco
 If you just want to browse the repository, you can do so by going [here](https://github.com/mariusmuja/flann).
 
 
+Build and Installation
+----------------------
+
+This package requires the following system dependencies:
+
+ - lz4 (in debian as liblz4)
+ - pkg-config (in debian as pkg-config)
+ - gcc (use build-essential in debian)
+
+For development use the ``run_develop_setup.sh`` script.
+
 Conditions of use
 -----------------
 
@@ -43,4 +54,3 @@ FLANN is distributed under the terms of the [BSD License](https://github.com/mar
    :target: https://travis-ci.org/WildbookOrg/wbia-pyflann?branch=master
 .. |Pypi| image:: https://img.shields.io/pypi/v/wbia-pyflann.svg
    :target: https://pypi.python.org/pypi/wbia-pyflann
-
