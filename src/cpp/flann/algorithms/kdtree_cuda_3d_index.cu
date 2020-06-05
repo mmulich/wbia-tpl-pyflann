@@ -280,7 +280,7 @@ void KDTreeCuda3dIndex<Distance>::knnSearchGpu(const Matrix<ElementType>& querie
     assert(dists.rows >= queries.rows);
     assert(int(indices.cols) >= knn);
     assert( dists.cols == indices.cols && dists.stride==indices.stride );
-    
+
     int istride=queries.stride/sizeof(ElementType);
     int ostride=indices.stride/4;
 
@@ -447,7 +447,7 @@ int KDTreeCuda3dIndex<Distance >::radiusSearchGpu(const Matrix<ElementType>& que
     bool use_heap = params.use_heap;
     if (indices.size() < queries.rows ) indices.resize(queries.rows);
     if (dists.size() < queries.rows ) dists.resize(queries.rows);
-    
+
     int istride=queries.stride/sizeof(ElementType);
 
     thrust::device_vector<float> queriesDev(istride* queries.rows,0);
@@ -733,7 +733,7 @@ void KDTreeCuda3dIndex<Distance>::uploadTreeToGpu()
     if( get_param(index_params_,"input_is_gpu_float4",false) ) {
 		assert( dataset_.cols == 3 && dataset_.stride==4*sizeof(float));
         thrust::copy( thrust::device_pointer_cast((float4*)dataset_.ptr()),thrust::device_pointer_cast((float4*)(dataset_.ptr()))+size_,tmp.begin());
-        
+
     }
     else {
         // k is limited to 4 -> use 128bit-alignment regardless of dimensionality

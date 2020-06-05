@@ -99,10 +99,10 @@ float search_with_ground_truth(Index& index, const Matrix<typename Distance::Ele
 
     size_t* indices = new size_t[nn+skipMatches];
     DistanceType* dists = new DistanceType[nn+skipMatches];
-    
+
     Matrix<size_t> indices_mat(indices, 1, nn+skipMatches);
     Matrix<DistanceType> dists_mat(dists, 1, nn+skipMatches);
-        
+
     size_t* neighbors = indices + skipMatches;
 
     int correct = 0;
@@ -113,7 +113,7 @@ float search_with_ground_truth(Index& index, const Matrix<typename Distance::Ele
         repeats++;
         t.start();
         correct = 0;
-        distR = 0;        
+        distR = 0;
         for (size_t i = 0; i < testData.rows; i++) {
             index.knnSearch(Matrix<ElementType>(testData[i], 1, testData.cols), indices_mat, dists_mat, nn+skipMatches, searchParams);
 

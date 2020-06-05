@@ -1,7 +1,7 @@
-
-
+# -*- coding: utf-8 -*-
 def main():  # nocover
     import pyflann
+
     print('Looks like the imports worked')
     print('pyflann = {!r}'.format(pyflann))
     print('pyflann.__file__ = {!r}'.format(pyflann.__file__))

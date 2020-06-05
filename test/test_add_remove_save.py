@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
 import os
-import pyflann
-import numpy as np
 import unittest
 from os.path import exists, isfile
 
+import numpy as np
+
+import pyflann
+
 
 class Test_PyFlann_add_remove_save(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -60,13 +60,13 @@ def test_remove_save():
     print('\nTest initial save load')
     flann_params = {
         'random_seed': 42,
-        #'log_level': 'debug', 'info',
-        #'log_level': 4,
+        # 'log_level': 'debug', 'info',
+        # 'log_level': 4,
         'cores': 1,
-        #'log_level': 'debug',
+        # 'log_level': 'debug',
     }
 
-    #pyflann.flann_ctypes.flannlib.flann_log_verbosity(4)
+    # pyflann.flann_ctypes.flannlib.flann_log_verbosity(4)
 
     flann1 = pyflann.FLANN(**flann_params)
     params1 = flann1.build_index(vecs, **flann_params)  # NOQA
@@ -108,7 +108,9 @@ def test_remove_save():
     flann3 = flann1
     print('\n * CHECK NN')
     idx3, dist = flann3.nn_index(qvecs, 3)
-    assert len(np.intersect1d(idx3.ravel(), remove_idx_list)) == 0, 'points were not removed'
+    assert (
+        len(np.intersect1d(idx3.ravel(), remove_idx_list)) == 0
+    ), 'points were not removed'
     print('\n * SAVE')
     flann3.save_index('test3.flann')
 

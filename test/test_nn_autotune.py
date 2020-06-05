@@ -1,13 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import numpy as np
 from pyflann import FLANN
 import unittest
 
 
 class Test_PyFLANN_nn(unittest.TestCase):
-
     def setUp(self):
-        self.nn = FLANN(log_level="warning")
+        self.nn = FLANN(log_level='warning')
 
     ##########################################################################
     # The typical
@@ -48,26 +48,32 @@ class Test_PyFLANN_nn(unittest.TestCase):
         # perm = np.random.permutation(N)
 
         # compute ground truth nearest neighbors
-        gt_idx, gt_dist = self.nn.nn(x, xq,
-                                     algorithm='linear',
-                                     num_neighbors=num_neighbors)
+        gt_idx, gt_dist = self.nn.nn(
+            x, xq, algorithm='linear', num_neighbors=num_neighbors
+        )
 
         for tp in [0.70, 0.80, 0.90]:
-            nidx, ndist = self.nn.nn(x, xq,
-                                     algorithm='autotuned',
-                                     sample_fraction=1.0,
-                                     num_neighbors=num_neighbors,
-                                     target_precision=tp, checks=-2, **kwargs)
+            nidx, ndist = self.nn.nn(
+                x,
+                xq,
+                algorithm='autotuned',
+                sample_fraction=1.0,
+                num_neighbors=num_neighbors,
+                target_precision=tp,
+                checks=-2,
+                **kwargs
+            )
 
             correctness = 0.0
             for i in range(N):
                 l1 = self.__ensure_list(nidx[i])
                 l2 = self.__ensure_list(gt_idx[i])
-                correctness += float(len(set(l1).intersection(l2))
-                                     ) / num_neighbors
+                correctness += float(len(set(l1).intersection(l2))) / num_neighbors
             correctness /= N
-            self.assertTrue(correctness >= tp * 0.9,
-                            'failed #1: targ_prec=%f, N=%d,correctness=%f' % (tp, N, correctness))
+            self.assertTrue(
+                correctness >= tp * 0.9,
+                'failed #1: targ_prec=%f, N=%d,correctness=%f' % (tp, N, correctness),
+            )
 
 
 if __name__ == '__main__':

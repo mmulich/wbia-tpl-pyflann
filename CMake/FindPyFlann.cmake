@@ -25,4 +25,3 @@ find_package_handle_standard_args(Flann DEFAULT_MSG
     FLANN_LIBRARY FLANN_INCLUDE_DIR)
 
 mark_as_advanced(FLANN_LIBRARY FLANN_INCLUDE_DIR)
-

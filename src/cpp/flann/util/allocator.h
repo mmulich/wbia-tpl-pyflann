@@ -110,7 +110,7 @@ public:
     {
         free();
     }
-    
+
     void free()
     {
         void* prev;

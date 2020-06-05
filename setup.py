@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 import sys
 from os.path import exists
@@ -14,10 +15,12 @@ def native_mb_python_tag(plat_impl=None, version_info=None):
     """
     if plat_impl is None:
         import platform
+
         plat_impl = platform.python_implementation()
 
     if version_info is None:
         import sys
+
         version_info = sys.version_info
 
     major, minor = version_info[0:2]
@@ -56,16 +59,19 @@ def parse_version(fpath):
 
     """
     import ast
+
     if not exists(fpath):
         raise ValueError('fpath={!r} does not exist'.format(fpath))
     with open(fpath, 'r') as file_:
         sourcecode = file_.read()
     pt = ast.parse(sourcecode)
+
     class VersionVisitor(ast.NodeVisitor):
         def visit_Assign(self, node):
             for target in node.targets:
                 if getattr(target, 'id', None) == '__version__':
                     self.version = node.value.s
+
     visitor = VersionVisitor()
     visitor.visit(pt)
     return visitor.version
@@ -90,6 +96,7 @@ def parse_requirements(fname='requirements.txt'):
         python -c "import setup; print(setup.parse_requirements())"
     """
     import re
+
     require_fpath = fname
 
     def parse_line(line):
@@ -148,6 +155,7 @@ def parse_requirements(fname='requirements.txt'):
 
 
 try:
+
     class EmptyListWithLength(list):
         def __len__(self):
             return 1
@@ -157,6 +165,8 @@ try:
 
         def __str__(self):
             return 'EmptyListWithLength()'
+
+
 except Exception:
     raise RuntimeError('FAILED TO ADD BUILD CONSTRUCTS')
 
@@ -165,7 +175,7 @@ NAME = 'wbia-pyflann'
 
 
 MB_PYTHON_TAG = native_mb_python_tag()  # NOQA
-VERSION = version = parse_version('pyflann/__init__.py')  # must be global for git tags
+VERSION = parse_version('pyflann/__init__.py')  # must be global for git tags
 
 AUTHORS = ', '.join(['Jon Crall', 'Marius Muja', 'WildMe Developers'])
 AUTHOR_EMAIL = 'dev@wildme.org'
@@ -191,7 +201,6 @@ KWARGS = OrderedDict(
         'build': parse_requirements('requirements/build.txt'),
         'runtime': parse_requirements('requirements/runtime.txt'),
     },
-
     # --- PACKAGES ---
     # The combination of packages and package_dir is how scikit-build will
     # know that the cmake installed files belong in the pyflann module and
@@ -224,7 +233,7 @@ KWARGS = OrderedDict(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Image Recognition'
+        'Topic :: Scientific/Engineering :: Image Recognition',
     ],
     cmake_args=[
         '-DBUILD_C_BINDINGS=ON',
@@ -241,4 +250,5 @@ if __name__ == '__main__':
     python -c "import pyflann; print(pyflann.__file__)"
     """
     import skbuild
+
     skbuild.setup(**KWARGS)

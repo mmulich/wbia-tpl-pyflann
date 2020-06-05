@@ -80,7 +80,7 @@ public:
     CenterChooser(const Distance& distance, const std::vector<ElementType*>& points) : distance_(distance), points_(points) {};
 
     virtual ~CenterChooser() {};
-    
+
     void setDataSize(size_t cols) { cols_ = cols; }
 
     /**
@@ -161,7 +161,7 @@ public:
     using CenterChooser<Distance>::distance_;
     using CenterChooser<Distance>::cols_;
 
-    GonzalesCenterChooser(const Distance& distance, const std::vector<ElementType*>& points) : 
+    GonzalesCenterChooser(const Distance& distance, const std::vector<ElementType*>& points) :
         CenterChooser<Distance>(distance, points) {}
 
     void operator()(int k, int* indices, int indices_length, int* centers, int& centers_length)
@@ -218,7 +218,7 @@ public:
     using CenterChooser<Distance>::distance_;
     using CenterChooser<Distance>::cols_;
 
-    KMeansppCenterChooser(const Distance& distance, const std::vector<ElementType*>& points) : 
+    KMeansppCenterChooser(const Distance& distance, const std::vector<ElementType*>& points) :
         CenterChooser<Distance>(distance, points) {}
 
     void operator()(int k, int* indices, int indices_length, int* centers, int& centers_length)

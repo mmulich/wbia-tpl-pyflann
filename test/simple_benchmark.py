@@ -10,6 +10,7 @@ def rand_vecs(num, dim, rng=np.random, dtype=np.uint8):
 
 def run_benchmark():
     import ubelt as ub
+
     data_dim = 128
     num_dpts = 1000000
     num_qpts = 25000
@@ -24,8 +25,9 @@ def run_benchmark():
     print('building datset for %d vecs' % (len(dataset)))
 
     with ub.Timer(label='building kdtrees', verbose=True) as t:
-        params = flann.build_index(dataset, algorithm='kdtree', trees=6,
-                                   random_seed=random_seed, cores=6)
+        params = flann.build_index(
+            dataset, algorithm='kdtree', trees=6, random_seed=random_seed, cores=6,
+        )
 
     print(params)
 
@@ -36,6 +38,7 @@ def run_benchmark():
             _ = flann.nn_index(testset, num_neighbs)  # NOQA
         times.append(t.ellapsed)
     print(np.mean(times))
+
 
 if __name__ == '__main__':
     run_benchmark()

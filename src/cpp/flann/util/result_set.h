@@ -931,4 +931,3 @@ private:
 }
 
 #endif //FLANN_RESULTSET_H
-

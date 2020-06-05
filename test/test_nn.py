@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from pyflann import FLANN
 import unittest
 import numpy as np
 
 
 class Test_PyFLANN_nn(unittest.TestCase):
-
     def setUp(self):
         self.nn = FLANN()
 
@@ -72,8 +72,7 @@ class Test_PyFLANN_nn(unittest.TestCase):
     def test_nn_stress_1d_1pt_composite(self):
         self.__nd_random_test(1, 1, algorithm='composite')
 
-    def __nd_random_test(self, dim, N, type=np.float32,
-                         num_neighbors=10, **kwargs):
+    def __nd_random_test(self, dim, N, type=np.float32, num_neighbors=10, **kwargs):
         """
         Make a set of random points, then pass the same ones to the
         query points.  Each point should be closest to itself.
@@ -87,30 +86,49 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
         # Make sure it's okay if we do make all the points equal
         x_mult_nn = np.concatenate([x for i in range(num_neighbors)])
-        nidx, ndists = self.nn.nn(
-            x_mult_nn, x, num_neighbors=num_neighbors, **kwargs)
+        nidx, ndists = self.nn.nn(x_mult_nn, x, num_neighbors=num_neighbors, **kwargs)
 
         correctness = 0.0
 
         for i in range(N):
-            correctness += float(len(set(nidx[i]).intersection(
-                [i + n * N for n in range(num_neighbors)]))) / num_neighbors
+            correctness += (
+                float(
+                    len(
+                        set(nidx[i]).intersection(
+                            [i + n * N for n in range(num_neighbors)]
+                        )
+                    )
+                )
+                / num_neighbors
+            )
 
-        self.assertTrue(correctness / N >= 0.99,
-                        'failed #1: N=%d,correctness=%f' % (N, correctness / N))
+        self.assertTrue(
+            correctness / N >= 0.99,
+            'failed #1: N=%d,correctness=%f' % (N, correctness / N),
+        )
 
         # now what happens if they are slightly off
-        x_mult_nn += np.random.randn(x_mult_nn.shape[0],
-                                     x_mult_nn.shape[1]) * 0.0001 / dim
-        n2idx, n2dists = self.nn.nn(
-            x_mult_nn, x, num_neighbors=num_neighbors, **kwargs)
+        x_mult_nn += (
+            np.random.randn(x_mult_nn.shape[0], x_mult_nn.shape[1]) * 0.0001 / dim
+        )
+        n2idx, n2dists = self.nn.nn(x_mult_nn, x, num_neighbors=num_neighbors, **kwargs)
 
         for i in range(N):
-            correctness += float(len(set(n2idx[i]).intersection(
-                [i + n * N for n in range(num_neighbors)]))) / num_neighbors
+            correctness += (
+                float(
+                    len(
+                        set(n2idx[i]).intersection(
+                            [i + n * N for n in range(num_neighbors)]
+                        )
+                    )
+                )
+                / num_neighbors
+            )
 
-        self.assertTrue(correctness / N >= 0.99,
-                        'failed #2: N=%d,correctness=%f' % (N, correctness / N))
+        self.assertTrue(
+            correctness / N >= 0.99,
+            'failed #2: N=%d,correctness=%f' % (N, correctness / N),
+        )
 
 
 if __name__ == '__main__':

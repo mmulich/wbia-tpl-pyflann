@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import pyflann
-import sys
-import numpy as np
 import unittest
 
-VALID_INT_TYPES = (np.typeDict['int64'],
-                   np.typeDict['int32'],
-                   np.typeDict['uint8'],
-                   np.dtype('int32'),
-                   np.dtype('uint8'),
-                   np.dtype('int64'),)
+import numpy as np
+
+import pyflann
+
+VALID_INT_TYPES = (
+    np.typeDict['int64'],
+    np.typeDict['int32'],
+    np.typeDict['uint8'],
+    np.dtype('int32'),
+    np.dtype('uint8'),
+    np.dtype('int64'),
+)
 
 
 def is_int_type(dtype):
@@ -43,7 +46,9 @@ class Test_PyFlann_add_remove(unittest.TestCase):
 
         # Build determenistic flann object
         flann = pyflann.FLANN()
-        params = flann.build_index(dataset, algorithm='kdtree', trees=4, random_seed=random_seed)
+        params = flann.build_index(
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
+        )
 
         # Add points in a loop where new_pts goes out of scope
         num_iters = 100
@@ -55,7 +60,10 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         num_extra = 200
         num_neighbs = num_dpts + num_extra
         result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
-        self.assertTrue((result1 > num_dpts).sum() >= num_qpts * num_extra, 'at least some of the returned points should be from the added set')
+        self.assertTrue(
+            (result1 > num_dpts).sum() >= num_qpts * num_extra,
+            'at least some of the returned points should be from the added set',
+        )
 
     def test_add(self):
         """
@@ -72,7 +80,9 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         testset = rand_vecs(num_qpts, data_dim, rng)
         # Build determenistic flann object
         flann = pyflann.FLANN()
-        params = flann.build_index(dataset, algorithm='kdtree', trees=4, random_seed=random_seed)
+        params = flann.build_index(
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
+        )
 
         # check nearest neighbor search before add, should be all over the place
         result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
@@ -83,9 +93,14 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # check nearest neighbor search after add
         result2, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
-        #print('Neighbor results should be between %d and %d' % (num_dpts, num_dpts + num_qpts))
-        self.assertTrue(np.all(result2.T[0] >= num_dpts), 'new points should be found first')
-        self.assertTrue((result2.T[1] == result1.T[0]).sum() > result1.shape[0] / 2, 'most old points should be found next')
+        # print('Neighbor results should be between %d and %d' % (num_dpts, num_dpts + num_qpts))
+        self.assertTrue(
+            np.all(result2.T[0] >= num_dpts), 'new points should be found first'
+        )
+        self.assertTrue(
+            (result2.T[1] == result1.T[0]).sum() > result1.shape[0] / 2,
+            'most old points should be found next',
+        )
 
     def test_remove(self):
         """
@@ -101,7 +116,9 @@ class Test_PyFlann_add_remove(unittest.TestCase):
 
         # Build determenistic flann object
         flann = pyflann.FLANN()
-        params = flann.build_index(dataset, algorithm='kdtree', trees=4, random_seed=random_seed)
+        params = flann.build_index(
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
+        )
 
         # check nearest neighbor search before add, should be all over the place
         result1, _ = flann.nn_index(dataset, num_neighbs, checks=params['checks'])
@@ -119,8 +136,12 @@ class Test_PyFlann_add_remove(unittest.TestCase):
 
         check2_odd = result2.T[0][1::2] == data_ids[1::2]
         check2_even = result2.T[0][0::2] == data_ids[0::2]
-        self.assertTrue(np.all(check2_odd), 'unremoved points should have unchanged neighbors')
-        self.assertTrue(not np.any(check2_even), 'removed points should have different neighbors')
+        self.assertTrue(
+            np.all(check2_odd), 'unremoved points should have unchanged neighbors',
+        )
+        self.assertTrue(
+            not np.any(check2_even), 'removed points should have different neighbors',
+        )
 
     def test_used_memory(self):
         """
@@ -137,7 +158,9 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         testset = rand_vecs(num_qpts, data_dim, rng)
         # Build determenistic flann object
         flann = pyflann.FLANN()
-        params = flann.build_index(dataset, algorithm='kdtree', trees=4, random_seed=random_seed)
+        params = flann.build_index(
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
+        )
 
         # check nearest neighbor search before add, should be all over the place
         result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import pyflann
 import numpy as np
 from numpy import ones
@@ -8,13 +9,11 @@ import unittest
 
 
 class Test_PyFLANN_nn(unittest.TestCase):
-
     def setUp(self):
         self.nn = pyflann.FLANN()
 
 
 class Test_PyFLANN_nn_index(unittest.TestCase):
-
     def testnn_index(self):
 
         dim = 10
@@ -67,6 +66,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
         nn = pyflann.FLANN()
         # self.assertRaises(FLANNException, lambda: nn.nn_index(rand(5, 5)))
         import pytest
+
         with pytest.raises(pyflann.FLANNException):
             nn.nn_index(rand(5, 5))
 

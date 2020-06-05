@@ -75,7 +75,7 @@ class AutotunedIndex : public NNIndex<Distance>
 public:
     typedef typename Distance::ElementType ElementType;
     typedef typename Distance::ResultType DistanceType;
-    
+
     typedef NNIndex<Distance> BaseClass;
 
     typedef AutotunedIndex<Distance> IndexType;
@@ -153,7 +153,7 @@ public:
         bestParams_["search_params"] = bestSearchParams_;
         bestParams_["speedup"] = speedup_;
     }
-    
+
     void buildIndex(const Matrix<ElementType>& dataset)
     {
     	dataset_ = dataset;
@@ -167,7 +167,7 @@ public:
             bestIndex_->addPoints(points, rebuild_threshold);
         }
     }
-    
+
     void removePoint(size_t id)
     {
         if (bestIndex_) {
@@ -175,7 +175,7 @@ public:
         }
     }
 
-    
+
     template<typename Archive>
     void serialize(Archive& ar)
     {
@@ -222,7 +222,7 @@ public:
             serialization::LoadArchive la(stream);
             la & *this;
         }
-        
+
         IndexParams params;
         flann_algorithm_t index_type = get_param<flann_algorithm_t>(bestParams_,"algorithm");
         bestIndex_ = create_index_by_type<Distance>((flann_algorithm_t)index_type, dataset_, params, distance_);
@@ -257,7 +257,7 @@ public:
         }
 
     }
-    
+
     int radiusSearch(const Matrix<ElementType>& queries,
             Matrix<size_t>& indices,
             Matrix<DistanceType>& dists,
@@ -283,11 +283,11 @@ public:
         }
         else {
             return bestIndex_->radiusSearch(queries, indices, dists, radius, params);
-        }        
+        }
     }
 
-    
-    
+
+
     /**
      *      Method that searches for nearest-neighbors
      */

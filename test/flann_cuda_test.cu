@@ -188,7 +188,7 @@ protected:
 			data[i][2]=rand()/float(RAND_MAX);
 // 			std::cout<<data[i][0]<<" "<<data[i][1]<<" "<<data[i][2]<<std::endl;
 		}
-		
+
 		query= flann::Matrix<float>(new float[n_points*3], n_points, 3);
 		for( int i=0; i<n_points; i++ )
 		{
@@ -197,23 +197,23 @@ protected:
 			query[i][2]=data[i][2];//float(rand())/RAND_MAX;
 // 			std::cout<<query[i][0]<<" "<<query[i][1]<<" "<<query[i][2]<<std::endl;
 		}
-		
-		
+
+
         printf("done\n");
-		
+
 		const int max_nn = 16;
-		
+
         dists = flann::Matrix<float>(new float[query.rows*max_nn], query.rows, max_nn);
 		gt_dists = flann::Matrix<float>(new float[query.rows*max_nn], query.rows, max_nn);
         indices = flann::Matrix<int>(new int[query.rows*max_nn], query.rows, max_nn);
 		gt_indices = flann::Matrix<int>(new int[query.rows*max_nn], query.rows, max_nn);
-		
-		
+
+
 		Index<L2<float> > index(data, flann::LinearIndexParams());
 		start_timer("Building linear index...");
 		index.buildIndex();
 		printf("done (%g seconds)\n", stop_timer());
-		
+
 		start_timer("Searching KNN...");
 		index.knnSearch(data, gt_indices, gt_dists, max_nn, flann::SearchParams() );
 // 		for( int i=0; i<gt_dists.rows; i++ )
@@ -231,7 +231,7 @@ protected:
 		delete[] gt_dists.ptr();
         delete[] indices.ptr();
 		delete[] gt_indices.ptr();
-		
+
     }
 };
 
@@ -252,7 +252,7 @@ TEST_F(Flann_3D_Random_Cloud, Test1NN)
 	float precision = computePrecisionDiscrete(gt_dists,dists, 0);
     EXPECT_GE(precision, 0.99);
     printf("Precision: %g\n", precision);
-	
+
 }
 
 TEST_F(Flann_3D_Random_Cloud, Test4NN)
@@ -272,7 +272,7 @@ TEST_F(Flann_3D_Random_Cloud, Test4NN)
 	float precision = computePrecisionDiscrete(gt_dists,dists, 1e-08);
     EXPECT_GE(precision, 0.99);
     printf("Precision: %g\n", precision);
-	
+
 }
 
 TEST_F(Flann_3D_Random_Cloud, Test4NNGpuBuffers)
@@ -289,10 +289,10 @@ TEST_F(Flann_3D_Random_Cloud, Test4NNGpuBuffers)
 		query_host[i]=make_float4(query[i][0],query[i][1],query[i][2],0);
 	}
 	thrust::device_vector<float4> query_device = query_host;
-	
+
 	flann::Matrix<float> data_device_matrix( (float*)thrust::raw_pointer_cast(&data_device[0]),data.rows,3,4*4);
 	flann::Matrix<float> query_device_matrix( (float*)thrust::raw_pointer_cast(&query_device[0]),data.rows,3,4*4);
-	
+
 	flann::KDTreeCuda3dIndexParams index_params;
 	index_params["input_is_gpu_float4"]=true;
 	flann::Index<L2_Simple<float> > index(data_device_matrix, index_params);
@@ -300,12 +300,12 @@ TEST_F(Flann_3D_Random_Cloud, Test4NNGpuBuffers)
     index.buildIndex();
     printf("done (%g seconds)\n", stop_timer());
 
-	
+
 	thrust::device_vector<int> indices_device(query.rows*4);
 	thrust::device_vector<float> dists_device(query.rows*4);
 	flann::Matrix<int> indices_device_matrix( (int*)thrust::raw_pointer_cast(&indices_device[0]),query.rows,4);
 	flann::Matrix<float> dists_device_matrix( (float*)thrust::raw_pointer_cast(&dists_device[0]),query.rows,4);
-	
+
     start_timer("Searching KNN...");
 	indices.cols=4;
 	dists.cols=4;
@@ -313,10 +313,10 @@ TEST_F(Flann_3D_Random_Cloud, Test4NNGpuBuffers)
 	sp.matrices_in_gpu_ram=true;
     index.knnSearch(query_device_matrix, indices_device_matrix, dists_device_matrix, 4, sp );
     printf("done (%g seconds)\n", stop_timer());
-	
+
 	flann::Matrix<int> indices_host( new int[ query.rows*4],query.rows,4 );
 	flann::Matrix<float> dists_host( new float[ query.rows*4],query.rows,4 );
-	
+
 	thrust::copy( dists_device.begin(), dists_device.end(), dists_host.ptr() );
 	thrust::copy( indices_device.begin(), indices_device.end(), indices_host.ptr() );
 
@@ -360,19 +360,19 @@ TEST_F(Flann_3D_Random_Cloud, TestRadiusSearchVector)
 		}
 	}
 	printf("done (%g seconds)\n", stop_timer());
-	
+
 	r=0.05;
 	start_timer("Radius search, r=0.05");
 	index.radiusSearch( query, indices,dists, r*r, flann::SearchParams() );
 	printf("done (%g seconds)", stop_timer());
-	
+
 	start_timer("verifying results...");
 	for( int i=0; i<query.rows; i++ )
 	{
 		for( int j=0; j<data.rows; j++ )
 		{
 			// for each pair of query and data points: either the distance between them
-			// is smaller than r AND the point is in the result set, or 
+			// is smaller than r AND the point is in the result set, or
 			// the distance is larger and it is not.
 			float dist = 0;
 			for( int k=0; k<3; k++ )
@@ -404,7 +404,7 @@ TEST_F(Flann_3D_Random_Cloud, TestRadiusSearchMatrix)
 	start_timer("counting neighbors...");
 	index.radiusSearch( query, counts,dummy, r*r, counting_params );
 	printf("done (%g seconds)", stop_timer());
-	
+
 	int max_neighbors=0;
 	for( int i=0; i<query.rows; i++ )
 	{
@@ -413,7 +413,7 @@ TEST_F(Flann_3D_Random_Cloud, TestRadiusSearchMatrix)
 	EXPECT_TRUE(max_neighbors > 0 );
 	flann::Matrix<int> indices( new int[max_neighbors*query.rows], query.rows, max_neighbors );
 	flann::Matrix<float> dists( new float[max_neighbors*query.rows], query.rows, max_neighbors );
-		
+
 	start_timer("Radius search, r=0.05");
 	index.radiusSearch( query, indices,dists, r*r, flann::SearchParams() );
 	printf("done (%g seconds)", stop_timer());
@@ -424,7 +424,7 @@ TEST_F(Flann_3D_Random_Cloud, TestRadiusSearchMatrix)
 		for( int j=0; j<data.rows; j++ )
 		{
 			// for each pair of query and data points: either the distance between them
-			// is smaller than r AND the point is in the result set, or 
+			// is smaller than r AND the point is in the result set, or
 			// the distance is larger and it is not.
 			float dist = 0;
 			for( int k=0; k<3; k++ )
@@ -457,7 +457,7 @@ TEST_F(Flann_3D, TestRadiusSearch)
 	start_timer("Radius search, r=0.02...");
 	index.radiusSearch( query, indices,dists, r*r, flann::SearchParams() );
 	printf("done (%g seconds)\n", stop_timer());
-	
+
 	start_timer("verifying results...");
 	for( int i=0; i<query.rows; i++ )
 	{
@@ -477,12 +477,12 @@ TEST_F(Flann_3D, TestRadiusSearch)
 		}
 	}
 	printf("done (%g seconds)\n", stop_timer());
-	
+
 	r=0.01;
 	start_timer("Radius search, r=0.01");
 	index.radiusSearch( query, indices,dists, r*r, flann::SearchParams() );
 	printf("done (%g seconds)\n", stop_timer());
-	
+
 	start_timer("verifying results...");
 	for( int i=0; i<query.rows; i++ )
 	{

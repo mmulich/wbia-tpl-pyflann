@@ -1317,4 +1317,3 @@ int flann_compute_cluster_centers_int(int* dataset, int rows, int cols, int clus
 {
     return _flann_compute_cluster_centers(dataset, rows, cols, clusters, result, flann_params);
 }
-

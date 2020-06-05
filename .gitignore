@@ -27,3 +27,5 @@ cmake-builds/*
 tmp
 *.pyc
 *.pyo
+
+.DS_Store

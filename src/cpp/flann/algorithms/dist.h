@@ -108,14 +108,14 @@ struct L2_3D
     template <typename Iterator1, typename Iterator2>
     ResultType operator()(Iterator1 a, Iterator2 b, size_t size, ResultType /*worst_dist*/ = -1) const
     {
-        ResultType result = ResultType();        
+        ResultType result = ResultType();
         ResultType diff;
         diff = *a++ - *b++;
         result += diff*diff;
         diff = *a++ - *b++;
         result += diff*diff;
         diff = *a++ - *b++;
-        result += diff*diff;        
+        result += diff*diff;
         return result;
     }
 
