@@ -137,10 +137,10 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         check2_odd = result2.T[0][1::2] == data_ids[1::2]
         check2_even = result2.T[0][0::2] == data_ids[0::2]
         self.assertTrue(
-            np.all(check2_odd), 'unremoved points should have unchanged neighbors'
+            np.all(check2_odd), 'unremoved points should have unchanged neighbors',
         )
         self.assertTrue(
-            not np.any(check2_even), 'removed points should have different neighbors'
+            not np.any(check2_even), 'removed points should have different neighbors',
         )
 
     def test_used_memory(self):

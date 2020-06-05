@@ -50,7 +50,7 @@ class Test_PyFLANN_clustering(unittest.TestCase):
 
         # rnseed = int(time.time())
         centroids = self.nn.kmeans(
-            xc[np.random.permutation(len(xc))], N, centers_init='random', random_seed=2
+            xc[np.random.permutation(len(xc))], N, centers_init='random', random_seed=2,
         )
         mindists = np.array([[sum((d1 - d2) ** 2) for d1 in x] for d2 in centroids]).min(
             0

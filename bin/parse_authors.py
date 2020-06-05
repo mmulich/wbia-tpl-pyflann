@@ -19,7 +19,7 @@ def parse_authors():
         print('ex = {!r}'.format(ex))
         return []
     else:
-        striped_lines = (l.strip() for l in output.split('\n'))
+        striped_lines = (line.strip() for line in output.split('\n'))
         freq_authors = [line.split(None, 1) for line in striped_lines if line]
         freq_authors = sorted((int(f), a) for f, a in freq_authors)[::-1]
         # keep authors with uppercase letters

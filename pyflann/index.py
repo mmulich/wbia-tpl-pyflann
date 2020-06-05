@@ -289,34 +289,37 @@ class FLANN(object):
 
         return params
 
-    def add_points(self, new_pts, rebuild_threshold=2):
+    def add_points(self, pts, rebuild_threshold=2.0):
         """
-        Adds pts to the current index. If the number of added points is more
-        than a factor of rebuild_threshold larger than the original number of
-        points, the index is rebuilt.
-        """
-        if new_pts.dtype.type not in allowed_types:
-            raise FLANNException('Cannot handle type: %s' % new_pts.dtype)
-        if new_pts.dtype != self.__curindex_type:
-            raise FLANNException('New points must have the same type')
-        new_pts = ensure_2d_array(new_pts, default_flags)
-        rows = new_pts.shape[0]
-        flann.add_points[self.__curindex_type](
-            self.__curindex, new_pts, rows, rebuild_threshold
-        )
-        self.__added_data.append(new_pts)
-
-    def remove_point(self, id_):
-        """
-        Removes a point from the index
+        Adds points to pre-built index.
 
         Params:
-            id = point id to be removed
-
-        Returns: void
+            pts: 2D numpy array of points.
+            rebuild_threshold: reallocs index when it grows by factor of
+                `rebuild_threshold`. A smaller value results is more space
+                efficient but less computationally efficient. Must be greater
+                than 1.
         """
-        flann.remove_point[self.__curindex_type](self.__curindex, id_)
-        self.__removed_ids.append(id_)
+        if pts.dtype.type not in allowed_types:
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
+        if pts.dtype.type != self.__curindex_type:
+            raise FLANNException('New points must have the same type')
+        pts = ensure_2d_array(pts, default_flags)
+        npts, dim = pts.shape
+        flann.add_points[self.__curindex_type](
+            self.__curindex, pts, npts, dim, rebuild_threshold
+        )
+        self.__curindex_data = np.row_stack((self.__curindex_data, pts))
+        self.__added_data.append(pts)
+
+    def remove_point(self, idx):
+        """
+        Removes a point from a pre-built index.
+        """
+        flann.remove_point[self.__curindex_type](self.__curindex, idx)
+        # Not sure if this is ok:
+        self.__curindex_data = np.delete(self.__curindex_data, idx, axis=0)
+        self.__removed_ids.append(idx)
 
     def remove_points(self, id_list):
         """
@@ -381,42 +384,6 @@ class FLANN(object):
         self.__added_data = []
         self.__removed_ids = []
         self.__removed_ids = []
-
-    def used_memory(self):
-        """
-        Returns the number of bytes consumed by the index.
-        """
-        return flann.used_memory[self.__curindex_type](self.__curindex)
-
-    def add_points(self, pts, rebuild_threshold=2.0):
-        """
-        Adds points to pre-built index.
-
-        Params:
-            pts: 2D numpy array of points.
-            rebuild_threshold: reallocs index when it grows by factor of
-                `rebuild_threshold`. A smaller value results is more space
-                efficient but less computationally efficient. Must be greater
-                than 1.
-        """
-        if pts.dtype.type not in allowed_types:
-            raise FLANNException('Cannot handle type: %s' % pts.dtype)
-        pts = ensure_2d_array(pts, default_flags)
-        npts, dim = pts.shape
-        flann.add_points[self.__curindex_type](
-            self.__curindex, pts, npts, dim, rebuild_threshold
-        )
-        self.__curindex_data = np.row_stack((self.__curindex_data, pts))
-        self.__added_data.append(pts)
-
-    def remove_point(self, idx):
-        """
-        Removes a point from a pre-built index.
-        """
-        flann.remove_point[self.__curindex_type](self.__curindex, idx)
-        # Not sure if this is ok:
-        self.__curindex_data = np.delete(self.__curindex_data, idx, axis=0)
-        self.__removed_ids.append(idx)
 
     def nn_index(self, qpts, num_neighbors=1, **kwargs):
         """
@@ -616,7 +583,7 @@ class FLANN(object):
         self.__flann_parameters.update(params)
 
         numclusters = flann.compute_cluster_centers[pts.dtype.type](
-            pts, npts, dim, num_clusters, result, pointer(self.__flann_parameters)
+            pts, npts, dim, num_clusters, result, pointer(self.__flann_parameters),
         )
         if numclusters <= 0:
             raise FLANNException('Error occured during clustering procedure.')
@@ -632,53 +599,3 @@ class FLANN(object):
     def __ensureRandomSeed(self, kwargs):
         if 'random_seed' not in kwargs:
             kwargs['random_seed'] = self.__rn_gen.randint(2 ** 30)
-
-    ####
-    # From the IBEIS fork
-
-    @property
-    def shape(self):
-        return self.get_indexed_shape()
-
-    @property
-    def __len__(self):
-        return self.shape[0]
-
-    def get_indexed_shape(self):
-        """ returns the shape of the data being indexed """
-        npts, dim = self.__curindex_data.shape
-        for _extra in self.__added_data:
-            npts += _extra.shape[0]
-        npts -= len(self.__removed_ids)
-        return npts, dim
-
-    def get_indexed_data(self):
-        """
-        returns all the data indexed by the FLANN object
-
-        (this returns points that have been removed but still exist in memory)
-        """
-        return self.__curindex_data, self.__added_data
-
-    def used_memory_dataset(self):
-        """
-        Returns the amount of memory used by the dataset
-        """
-        if self.__curindex_data is None:
-            return 0
-        num_bytes = self.__curindex_data.nbytes
-        for _extra in self.__added_data:
-            num_bytes += _extra.nbytes
-        return num_bytes
-
-    def remove_points(self, idxs):
-        """
-        Removes multiple points from the index
-
-        Params:
-            idxs = point ids to be removed
-
-        Returns: void
-        """
-        for idx in idxs:
-            flann.remove_point[self.__curindex_type](self.__curindex, idx)

@@ -3,7 +3,8 @@
 
 
 import sys
-import unittest
+
+# import unittest
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
@@ -12,4 +13,4 @@ if __name__ == '__main__':
 
     test_file = sys.argv[1]
     sys.argv = sys.argv[1:]
-    execfile(test_file)
+    exec(open(test_file).read())

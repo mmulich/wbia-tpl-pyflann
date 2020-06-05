@@ -150,7 +150,7 @@ def main():
         # Upload the docker image to quay.io
         docker push {DOCKER_URI}
         '''
-            ).format(NAME=NAME, ROOT=ROOT, DOCKER_TAG=DOCKER_TAG, DOCKER_URI=DOCKER_URI),
+            ).format(NAME=NAME, ROOT=ROOT, DOCKER_TAG=DOCKER_TAG, DOCKER_URI=DOCKER_URI,),
             'bash',
         )
     )
