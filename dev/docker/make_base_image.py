@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Create a base docker image for building pyflann
 """
@@ -17,7 +18,7 @@ def main():
 
     NAME = 'pyhesaff'
     VERSION = '0.1.2'
-    DOCKER_TAG = '{}-{}'.format(NAME, VERSION )
+    DOCKER_TAG = '{}-{}'.format(NAME, VERSION)
 
     QUAY_REPO = 'quay.io/erotemic/manylinux-for'
     DOCKER_URI = '{QUAY_REPO}:{DOCKER_TAG}'.format(**locals())
@@ -77,7 +78,8 @@ def main():
             /opt/python/$MB_PYTHON_TAG/bin/python -m virtualenv ./venv-$MB_PYTHON_TAG && \
             source ./venv-$MB_PYTHON_TAG/bin/activate && \
             pip install scikit-build cmake ninja
-        ''')
+        '''
+    )
 
     docker_code2 = '\n\n'.join([ub.paragraph(p) for p in docker_code.split('\n\n')])
 
@@ -90,12 +92,15 @@ def main():
     with open(dockerfile_fpath, 'w') as file:
         file.write(docker_code2)
 
-    docker_build_cli = ' '.join([
-        'docker', 'build',
-        '--tag {}'.format(DOCKER_TAG),
-        '-f {}'.format(dockerfile_fpath),
-        '.'
-    ])
+    docker_build_cli = ' '.join(
+        [
+            'docker',
+            'build',
+            '--tag {}'.format(DOCKER_TAG),
+            '-f {}'.format(dockerfile_fpath),
+            '.',
+        ]
+    )
     print('docker_build_cli = {!r}'.format(docker_build_cli))
     if ub.argflag('--dry'):
         print('DRY RUN')
@@ -109,12 +114,16 @@ def main():
             print(info['command'])
             print(info['err'])
             print('NOTE: sometimes reruning the command manually works')
-            raise Exception('Building docker failed with exit code {}'.format(info['ret']))
+            raise Exception(
+                'Building docker failed with exit code {}'.format(info['ret'])
+            )
         else:
             print(ub.color_text('\n--- SUCCESS ---', 'green'))
 
-    print(ub.highlight_code(ub.codeblock(
-        r'''
+    print(
+        ub.highlight_code(
+            ub.codeblock(
+                r'''
         # Finished creating the docker image.
         # To test / export / publish you can do something like this:
 
@@ -140,8 +149,11 @@ def main():
 
         # Upload the docker image to quay.io
         docker push {DOCKER_URI}
-        ''').format(NAME=NAME, ROOT=ROOT, DOCKER_TAG=DOCKER_TAG,
-                    DOCKER_URI=DOCKER_URI), 'bash'))
+        '''
+            ).format(NAME=NAME, ROOT=ROOT, DOCKER_TAG=DOCKER_TAG, DOCKER_URI=DOCKER_URI),
+            'bash',
+        )
+    )
 
     PUBLISH = 0
     if PUBLISH:

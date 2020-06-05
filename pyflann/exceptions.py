@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2008-2009  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
 # Copyright 2008-2009  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
 #

@@ -606,4 +606,3 @@ FLANN_EXPORT int flann_compute_cluster_centers_int(int* dataset,
 
 
 #endif /*FLANN_H_*/
-

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def parse_authors():
     """
     Parse the git authors of a repo
@@ -9,9 +10,11 @@ def parse_authors():
         python bin/parse_authors.py
     """
     import subprocess
+
     try:
-        output = subprocess.check_output(['git', 'shortlog', '-s'],
-                                         universal_newlines=True)
+        output = subprocess.check_output(
+            ['git', 'shortlog', '-s'], universal_newlines=True
+        )
     except Exception as ex:
         print('ex = {!r}'.format(ex))
         return []

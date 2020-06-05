@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2008-2009  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
 # Copyright 2008-2009  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
 #
@@ -63,25 +64,25 @@ from pyflann.index import (
 )
 
 __all__ = [
-    "CustomStructure",
-    "FLANN",
-    "FLANNException",
-    "FLANNParameters",
-    "FLANN_INDEX",
-    "FlannLib",
-    "STRING",
-    "allowed_types",
-    "default_flags",
-    "define_functions",
-    "ensure_2d_array",
-    "exceptions",
-    "flann",
-    "flann_ctypes",
-    "flannlib",
-    "index",
-    "index_type",
-    "load_flann_library",
-    "set_distance_type",
-    "to_bytes",
-    "type_mappings",
+    'CustomStructure',
+    'FLANN',
+    'FLANNException',
+    'FLANNParameters',
+    'FLANN_INDEX',
+    'FlannLib',
+    'STRING',
+    'allowed_types',
+    'default_flags',
+    'define_functions',
+    'ensure_2d_array',
+    'exceptions',
+    'flann',
+    'flann_ctypes',
+    'flannlib',
+    'index',
+    'index_type',
+    'load_flann_library',
+    'set_distance_type',
+    'to_bytes',
+    'type_mappings',
 ]

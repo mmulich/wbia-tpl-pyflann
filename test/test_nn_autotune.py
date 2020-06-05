@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import numpy as np
 from pyflann import FLANN
 import unittest
@@ -6,7 +7,7 @@ import unittest
 
 class Test_PyFLANN_nn(unittest.TestCase):
     def setUp(self):
-        self.nn = FLANN(log_level="warning")
+        self.nn = FLANN(log_level='warning')
 
     ##########################################################################
     # The typical
@@ -48,14 +49,14 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
         # compute ground truth nearest neighbors
         gt_idx, gt_dist = self.nn.nn(
-            x, xq, algorithm="linear", num_neighbors=num_neighbors
+            x, xq, algorithm='linear', num_neighbors=num_neighbors
         )
 
         for tp in [0.70, 0.80, 0.90]:
             nidx, ndist = self.nn.nn(
                 x,
                 xq,
-                algorithm="autotuned",
+                algorithm='autotuned',
                 sample_fraction=1.0,
                 num_neighbors=num_neighbors,
                 target_precision=tp,
@@ -71,11 +72,11 @@ class Test_PyFLANN_nn(unittest.TestCase):
             correctness /= N
             self.assertTrue(
                 correctness >= tp * 0.9,
-                "failed #1: targ_prec=%f, N=%d,correctness=%f" % (tp, N, correctness),
+                'failed #1: targ_prec=%f, N=%d,correctness=%f' % (tp, N, correctness),
             )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """
     pytest ~/code/flann/test/test_nn_autotune.py
     """

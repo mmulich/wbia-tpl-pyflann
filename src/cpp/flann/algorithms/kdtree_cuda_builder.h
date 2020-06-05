@@ -536,7 +536,7 @@ public:
                 break;
             }
             last_node_count=alloc_info[NodeCount];
-			
+
 			// a node was un-splittable due to a lack of space
             if( alloc_info[OutOfSpace]==1 ) {
                 resize_node_vectors(alloc_info[NodesAllocated]*2);
@@ -598,8 +598,8 @@ public:
 
         }
     }
-    
-	template<class Distance> 
+
+	template<class Distance>
 	friend class KDTreeCuda3dIndex;
 
 protected:
@@ -615,7 +615,7 @@ protected:
         thrust::device_vector<int>* labelsUnique=tmp_owners_;
         thrust::device_vector<int>* countsUnique=tmp_index_;
 		// assume: points of each node are continuous in the array
-		
+
 		// find which nodes are here, and where each node's points begin and end
         int unique_labels = thrust::unique_by_key_copy( owners.begin(), owners.end(), thrust::counting_iterator<int>(0), labelsUnique->begin(), countsUnique->begin()).first - labelsUnique->begin();
 
@@ -683,9 +683,9 @@ protected:
 
 
     const thrust::device_vector<float4>* points_;
-	
+
 	// tree data, those are stored per-node
-	
+
 	//! left child of each node. (right child==left child + 1, due to the alloc mechanism)
 	//! child1_[node]==-1 if node is a leaf node
     thrust::device_vector<int>* child1_;
@@ -709,7 +709,7 @@ protected:
     //  thrust::device_vector<int> node_count_;
     //  thrust::device_vector<int> nodes_allocated_;
     thrust::device_vector<int> allocation_info_;
-	
+
     int max_leaf_size_;
 
 	// coordinate values of the points

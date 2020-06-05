@@ -132,5 +132,3 @@ public:
 }
 
 #endif //FLANN_RANDOM_H
-
-

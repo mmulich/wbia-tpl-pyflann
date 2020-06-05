@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from pyflann import FLANN
 import unittest
 import numpy as np
@@ -12,64 +13,64 @@ class Test_PyFLANN_nn(unittest.TestCase):
     # The typical
 
     def test_nn_2d_10pt_kmeans(self):
-        self.__nd_random_test(2, 2, algorithm="kdtree")
+        self.__nd_random_test(2, 2, algorithm='kdtree')
 
     def test_nn_2d_1000pt_kmeans(self):
-        self.__nd_random_test(2, 1000, algorithm="kmeans")
+        self.__nd_random_test(2, 1000, algorithm='kmeans')
 
     def test_nn_100d_1000pt_kmeans(self):
-        self.__nd_random_test(100, 1000, algorithm="kmeans")
+        self.__nd_random_test(100, 1000, algorithm='kmeans')
 
     def test_nn_500d_100pt_kmeans(self):
-        self.__nd_random_test(500, 100, algorithm="kmeans")
+        self.__nd_random_test(500, 100, algorithm='kmeans')
 
     def test_nn_2d_1000pt_kdtree(self):
-        self.__nd_random_test(2, 1000, algorithm="kdtree")
+        self.__nd_random_test(2, 1000, algorithm='kdtree')
 
     def test_nn_100d_1000pt_kdtree(self):
-        self.__nd_random_test(100, 1000, algorithm="kdtree")
+        self.__nd_random_test(100, 1000, algorithm='kdtree')
 
     def test_nn_500d_100pt_kdtree(self):
-        self.__nd_random_test(500, 100, algorithm="kdtree")
+        self.__nd_random_test(500, 100, algorithm='kdtree')
 
     def test_nn_2d_1000pt_linear(self):
-        self.__nd_random_test(2, 1000, algorithm="linear")
+        self.__nd_random_test(2, 1000, algorithm='linear')
 
     def test_nn_100d_50pt_linear(self):
-        self.__nd_random_test(100, 50, algorithm="linear")
+        self.__nd_random_test(100, 50, algorithm='linear')
 
     def test_nn_2d_1000pt_composite(self):
-        self.__nd_random_test(2, 1000, algorithm="composite")
+        self.__nd_random_test(2, 1000, algorithm='composite')
 
     def test_nn_100d_1000pt_composite(self):
-        self.__nd_random_test(100, 1000, algorithm="composite")
+        self.__nd_random_test(100, 1000, algorithm='composite')
 
     def test_nn_500d_100pt_composite(self):
-        self.__nd_random_test(500, 100, algorithm="composite")
+        self.__nd_random_test(500, 100, algorithm='composite')
 
     def test_nn_multtrees_2d_1000pt_kmeans(self):
-        self.__nd_random_test(2, 1000, algorithm="kmeans", trees=8)
+        self.__nd_random_test(2, 1000, algorithm='kmeans', trees=8)
 
     def test_nn_multtrees_100d_1000pt_kmeans(self):
-        self.__nd_random_test(100, 1000, algorithm="kmeans", trees=8)
+        self.__nd_random_test(100, 1000, algorithm='kmeans', trees=8)
 
     def test_nn_multtrees_500d_100pt_kmeans(self):
-        self.__nd_random_test(500, 100, algorithm="kmeans", trees=8)
+        self.__nd_random_test(500, 100, algorithm='kmeans', trees=8)
 
     ##########################################################################
     # Stress it should handle
 
     def test_nn_stress_1d_1pt_kmeans(self):
-        self.__nd_random_test(1, 1, algorithm="kmeans")
+        self.__nd_random_test(1, 1, algorithm='kmeans')
 
     def test_nn_stress_1d_1pt_linear(self):
-        self.__nd_random_test(1, 1, algorithm="linear")
+        self.__nd_random_test(1, 1, algorithm='linear')
 
     def test_nn_stress_1d_1pt_kdtree(self):
-        self.__nd_random_test(1, 1, algorithm="kdtree")
+        self.__nd_random_test(1, 1, algorithm='kdtree')
 
     def test_nn_stress_1d_1pt_composite(self):
-        self.__nd_random_test(1, 1, algorithm="composite")
+        self.__nd_random_test(1, 1, algorithm='composite')
 
     def __nd_random_test(self, dim, N, type=np.float32, num_neighbors=10, **kwargs):
         """
@@ -103,7 +104,7 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
         self.assertTrue(
             correctness / N >= 0.99,
-            "failed #1: N=%d,correctness=%f" % (N, correctness / N),
+            'failed #1: N=%d,correctness=%f' % (N, correctness / N),
         )
 
         # now what happens if they are slightly off
@@ -126,11 +127,11 @@ class Test_PyFLANN_nn(unittest.TestCase):
 
         self.assertTrue(
             correctness / N >= 0.99,
-            "failed #2: N=%d,correctness=%f" % (N, correctness / N),
+            'failed #2: N=%d,correctness=%f' % (N, correctness / N),
         )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """
     pytest  ~/code/flann/test/test_nn.py --verbose
     """

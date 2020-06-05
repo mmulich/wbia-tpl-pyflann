@@ -124,7 +124,7 @@ public:
         this->swap(other);
         return *this;
     }
-    
+
     /**
      * Standard destructor
      */
@@ -132,7 +132,7 @@ public:
     {
         freeIndex();
     }
-    
+
     BaseClass* clone() const
     {
         return new KDTreeSingleIndex(*this);
@@ -277,7 +277,7 @@ private:
          * The child nodes.
          */
         Node* child1, * child2;
-        
+
         ~Node()
         {
             if (child1) child1->~Node();
@@ -320,7 +320,7 @@ private:
     struct Interval
     {
         DistanceType low, high;
-        
+
     private:
         template <typename Archive>
         void serialize(Archive& ar)
@@ -337,7 +337,7 @@ private:
     typedef BranchSt* Branch;
 
 
-    
+
     void freeIndex()
     {
         if (data_.ptr()) {
@@ -347,7 +347,7 @@ private:
         if (root_node_) root_node_->~Node();
         pool_.free();
     }
-    
+
     void copyTree(NodePtr& dst, const NodePtr& src)
     {
         dst = new(pool_) Node();
@@ -488,7 +488,7 @@ private:
         if (lim1>count/2) index = lim1;
         else if (lim2<count/2) index = lim2;
         else index = count/2;
-        
+
         assert(index > 0 && index < count);
     }
 
@@ -532,7 +532,7 @@ private:
         if (lim1>count/2) index = lim1;
         else if (lim2<count/2) index = lim2;
         else index = count/2;
-        
+
         assert(index > 0 && index < count);
     }
 
@@ -641,7 +641,7 @@ private:
         dists[idx] = dst;
     }
 
-    
+
     void swap(KDTreeSingleIndex& other)
     {
         BaseClass::swap(other);
@@ -653,14 +653,14 @@ private:
         std::swap(root_bbox_, other.root_bbox_);
         std::swap(pool_, other.pool_);
     }
-    
+
 private:
 
 
 
     int leaf_max_size_;
-    
-    
+
+
     bool reorder_;
 
     /**

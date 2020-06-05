@@ -123,7 +123,7 @@ public:
     	xor_masks_(other.xor_masks_)
     {
     }
-    
+
     LshIndex& operator=(LshIndex other)
     {
     	this->swap(other);
@@ -140,7 +140,7 @@ public:
     {
     	return new LshIndex(*this);
     }
-    
+
     using BaseClass::buildIndex;
 
     void addPoints(const Matrix<ElementType>& points, float rebuild_threshold = 2)
@@ -149,16 +149,16 @@ public:
         size_t old_size = size_;
 
         extendDataset(points);
-        
+
         if (rebuild_threshold>1 && size_at_build_*rebuild_threshold<size_) {
             buildIndex();
         }
         else {
             for (unsigned int i = 0; i < table_number_; ++i) {
-                lsh::LshTable<ElementType>& table = tables_[i];                
+                lsh::LshTable<ElementType>& table = tables_[i];
                 for (size_t i=old_size;i<size_;++i) {
                     table.add(i, points_[i]);
-                }            
+                }
             }
         }
     }
@@ -530,7 +530,7 @@ private:
 
     /** The different hash tables */
     std::vector<lsh::LshTable<ElementType> > tables_;
-    
+
     /** table number */
     unsigned int table_number_;
     /** key size */

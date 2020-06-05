@@ -36,7 +36,3 @@ if (HDF5_FOUND)
 else()
     message("hdf5 library not found, not compiling flann_example.cpp")
 endif()
-
-
-
-

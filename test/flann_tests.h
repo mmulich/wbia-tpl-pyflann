@@ -719,4 +719,3 @@ protected:
 };
 
 #endif /* FLANN_TESTS_H_ */
-

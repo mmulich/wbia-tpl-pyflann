@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import unittest
 
 import numpy as np
@@ -6,12 +7,12 @@ import numpy as np
 import pyflann
 
 VALID_INT_TYPES = (
-    np.typeDict["int64"],
-    np.typeDict["int32"],
-    np.typeDict["uint8"],
-    np.dtype("int32"),
-    np.dtype("uint8"),
-    np.dtype("int64"),
+    np.typeDict['int64'],
+    np.typeDict['int32'],
+    np.typeDict['uint8'],
+    np.dtype('int32'),
+    np.dtype('uint8'),
+    np.dtype('int64'),
 )
 
 
@@ -46,7 +47,7 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # Build determenistic flann object
         flann = pyflann.FLANN()
         params = flann.build_index(
-            dataset, algorithm="kdtree", trees=4, random_seed=random_seed
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
         )
 
         # Add points in a loop where new_pts goes out of scope
@@ -58,10 +59,10 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # query to ensure that at least some of the new points are in the results
         num_extra = 200
         num_neighbs = num_dpts + num_extra
-        result1, _ = flann.nn_index(testset, num_neighbs, checks=params["checks"])
+        result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
         self.assertTrue(
             (result1 > num_dpts).sum() >= num_qpts * num_extra,
-            "at least some of the returned points should be from the added set",
+            'at least some of the returned points should be from the added set',
         )
 
     def test_add(self):
@@ -80,25 +81,25 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # Build determenistic flann object
         flann = pyflann.FLANN()
         params = flann.build_index(
-            dataset, algorithm="kdtree", trees=4, random_seed=random_seed
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
         )
 
         # check nearest neighbor search before add, should be all over the place
-        result1, _ = flann.nn_index(testset, num_neighbs, checks=params["checks"])
+        result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
         # Add points
         flann.add_points(testset, 2)
 
         # check nearest neighbor search after add
-        result2, _ = flann.nn_index(testset, num_neighbs, checks=params["checks"])
+        result2, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
         # print('Neighbor results should be between %d and %d' % (num_dpts, num_dpts + num_qpts))
         self.assertTrue(
-            np.all(result2.T[0] >= num_dpts), "new points should be found first"
+            np.all(result2.T[0] >= num_dpts), 'new points should be found first'
         )
         self.assertTrue(
             (result2.T[1] == result1.T[0]).sum() > result1.shape[0] / 2,
-            "most old points should be found next",
+            'most old points should be found next',
         )
 
     def test_remove(self):
@@ -116,32 +117,30 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # Build determenistic flann object
         flann = pyflann.FLANN()
         params = flann.build_index(
-            dataset, algorithm="kdtree", trees=4, random_seed=random_seed
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
         )
 
         # check nearest neighbor search before add, should be all over the place
-        result1, _ = flann.nn_index(dataset, num_neighbs, checks=params["checks"])
+        result1, _ = flann.nn_index(dataset, num_neighbs, checks=params['checks'])
 
         data_ids = np.arange(0, dataset.shape[0])
 
         check1 = result1.T[0] == data_ids
-        self.assertTrue(
-            np.all(check1), "self query should result in consecutive results"
-        )
+        self.assertTrue(np.all(check1), 'self query should result in consecutive results')
 
         # Remove half of the data points
         for id_ in range(0, num_dpts, 2):
             flann.remove_point(id_)
 
-        result2, _ = flann.nn_index(dataset, num_neighbs, checks=params["checks"])
+        result2, _ = flann.nn_index(dataset, num_neighbs, checks=params['checks'])
 
         check2_odd = result2.T[0][1::2] == data_ids[1::2]
         check2_even = result2.T[0][0::2] == data_ids[0::2]
         self.assertTrue(
-            np.all(check2_odd), "unremoved points should have unchanged neighbors"
+            np.all(check2_odd), 'unremoved points should have unchanged neighbors'
         )
         self.assertTrue(
-            not np.any(check2_even), "removed points should have different neighbors"
+            not np.any(check2_even), 'removed points should have different neighbors'
         )
 
     def test_used_memory(self):
@@ -160,11 +159,11 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         # Build determenistic flann object
         flann = pyflann.FLANN()
         params = flann.build_index(
-            dataset, algorithm="kdtree", trees=4, random_seed=random_seed
+            dataset, algorithm='kdtree', trees=4, random_seed=random_seed
         )
 
         # check nearest neighbor search before add, should be all over the place
-        result1, _ = flann.nn_index(testset, num_neighbs, checks=params["checks"])
+        result1, _ = flann.nn_index(testset, num_neighbs, checks=params['checks'])
 
         prev_index_memory = flann.used_memory()
         prev_data_memory = flann.used_memory_dataset()
@@ -179,13 +178,11 @@ class Test_PyFlann_add_remove(unittest.TestCase):
         index_memory_diff = post_index_memory - prev_index_memory
         data_memory_diff = post_data_memory - prev_data_memory
 
-        self.assertTrue(
-            index_memory_diff > 0, "add points should increase memory usage"
-        )
-        self.assertTrue(data_memory_diff > 0, "add points should increase memory usage")
+        self.assertTrue(index_memory_diff > 0, 'add points should increase memory usage')
+        self.assertTrue(data_memory_diff > 0, 'add points should increase memory usage')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """
     CommandLine:
         python test/test_add_remove.py

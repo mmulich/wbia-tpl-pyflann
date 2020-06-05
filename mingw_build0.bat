@@ -1,7 +1,7 @@
 SET ORIGINAL=%CD%
 
 call :build_flann
-goto :exit 
+goto :exit
 
 :build_flann
 :: helper variables
@@ -62,5 +62,5 @@ cd %ORIGINAL%
 exit /b
 
 
-:: cd 
+:: cd
 :: python ../../build/src/python/setup.py develop

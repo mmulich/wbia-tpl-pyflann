@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2008-2010  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
 # Copyright 2008-2010  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
 #
@@ -51,16 +52,16 @@ def set_distance_type(distance_type, order=0):
     """
 
     distance_translation = {
-        "euclidean": 1,
-        "manhattan": 2,
-        "minkowski": 3,
-        "max_dist": 4,
-        "hik": 5,
-        "hellinger": 6,
-        "chi_square": 7,
-        "cs": 7,
-        "kullback_leibler": 8,
-        "kl": 8,
+        'euclidean': 1,
+        'manhattan': 2,
+        'minkowski': 3,
+        'max_dist': 4,
+        'hik': 5,
+        'hellinger': 6,
+        'chi_square': 7,
+        'cs': 7,
+        'kullback_leibler': 8,
+        'kl': 8,
     }
     if isinstance(distance_type, str):
         distance_type = distance_translation[distance_type]
@@ -70,7 +71,7 @@ def set_distance_type(distance_type, order=0):
 
 def to_bytes(string):
     if sys.hexversion > 0x03000000:
-        return bytes(string, "utf-8")
+        return bytes(string, 'utf-8')
     return string
 
 
@@ -205,13 +206,13 @@ class FLANN(object):
         """
 
         if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
         if qpts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
         if pts.dtype != qpts.dtype:
-            raise FLANNException("Data and query must have the same type")
+            raise FLANNException('Data and query must have the same type')
 
         pts = ensure_2d_array(pts, default_flags)
         qpts = ensure_2d_array(qpts, default_flags)
@@ -219,8 +220,8 @@ class FLANN(object):
         npts, dim = pts.shape
         nqpts = qpts.shape[0]
 
-        assert qpts.shape[1] == dim, "data and query must have the same dims"
-        assert npts >= num_neighbors, "more neighbors than there are points"
+        assert qpts.shape[1] == dim, 'data and query must have the same dims'
+        assert npts >= num_neighbors, 'more neighbors than there are points'
 
         result = np.empty((nqpts, num_neighbors), dtype=index_type)
         if pts.dtype == np.float64:
@@ -261,7 +262,7 @@ class FLANN(object):
         """
 
         if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
         pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
@@ -284,7 +285,7 @@ class FLANN(object):
         self.__curindex_type = pts.dtype.type
 
         params = dict(self.__flann_parameters)
-        params["speedup"] = speedup.value
+        params['speedup'] = speedup.value
 
         return params
 
@@ -295,9 +296,9 @@ class FLANN(object):
         points, the index is rebuilt.
         """
         if new_pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % new_pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % new_pts.dtype)
         if new_pts.dtype != self.__curindex_type:
-            raise FLANNException("New points must have the same type")
+            raise FLANNException('New points must have the same type')
         new_pts = ensure_2d_array(new_pts, default_flags)
         rows = new_pts.shape[0]
         flann.add_points[self.__curindex_type](
@@ -344,7 +345,7 @@ class FLANN(object):
         """
 
         if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
         pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
@@ -367,8 +368,8 @@ class FLANN(object):
         if self.__curindex is None:
             raise FLANNException(
                 (
-                    "Error loading the FLANN index with filename=%r."
-                    " C++ may have thrown more detailed errors"
+                    'Error loading the FLANN index with filename=%r.'
+                    ' C++ may have thrown more detailed errors'
                 )
                 % (filename,)
             )
@@ -399,7 +400,7 @@ class FLANN(object):
                 than 1.
         """
         if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
         pts = ensure_2d_array(pts, default_flags)
         npts, dim = pts.shape
         flann.add_points[self.__curindex_type](
@@ -426,14 +427,14 @@ class FLANN(object):
 
         if self.__curindex is None:
             raise FLANNException(
-                "build_index(...) method not called first or current index deleted."
+                'build_index(...) method not called first or current index deleted.'
             )
 
         if qpts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % qpts.dtype)
+            raise FLANNException('Cannot handle type: %s' % qpts.dtype)
 
         if self.__curindex_type != qpts.dtype.type:
-            raise FLANNException("Index and query must have the same type")
+            raise FLANNException('Index and query must have the same type')
 
         qpts = ensure_2d_array(qpts, default_flags)
 
@@ -444,8 +445,8 @@ class FLANN(object):
 
         nqpts = qpts.shape[0]
 
-        assert qpts.shape[1] == dim, "data and query must have the same dims"
-        assert npts >= num_neighbors, "more neighbors than there are points"
+        assert qpts.shape[1] == dim, 'data and query must have the same dims'
+        assert npts >= num_neighbors, 'more neighbors than there are points'
 
         result = np.empty((nqpts, num_neighbors), dtype=index_type)
         if self.__curindex_type == np.float64:
@@ -474,17 +475,17 @@ class FLANN(object):
 
         if self.__curindex is None:
             raise FLANNException(
-                "build_index(...) method not called first or current index deleted."
+                'build_index(...) method not called first or current index deleted.'
             )
 
         if query.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % query.dtype)
+            raise FLANNException('Cannot handle type: %s' % query.dtype)
 
         if self.__curindex_type != query.dtype.type:
-            raise FLANNException("Index and query must have the same type")
+            raise FLANNException('Index and query must have the same type')
 
         npts, dim = self.get_indexed_shape()
-        assert query.shape[0] == dim, "data and query must have the same dims"
+        assert query.shape[0] == dim, 'data and query must have the same dims'
 
         result = np.empty(npts, dtype=index_type)
         if self.__curindex_type == np.float64:
@@ -542,7 +543,7 @@ class FLANN(object):
         """
 
         if int(num_clusters) != num_clusters or num_clusters < 1:
-            raise FLANNException("num_clusters must be an integer >= 1")
+            raise FLANNException('num_clusters must be an integer >= 1')
 
         if num_clusters == 1:
             if dtype is None or dtype == pts.dtype:
@@ -574,15 +575,15 @@ class FLANN(object):
         # First verify the paremeters are sensible.
 
         if pts.dtype.type not in allowed_types:
-            raise FLANNException("Cannot handle type: %s" % pts.dtype)
+            raise FLANNException('Cannot handle type: %s' % pts.dtype)
 
         if int(branch_size) != branch_size or branch_size < 2:
-            raise FLANNException("branch_size must be an integer >= 2.")
+            raise FLANNException('branch_size must be an integer >= 2.')
 
         branch_size = int(branch_size)
 
         if int(num_branches) != num_branches or num_branches < 1:
-            raise FLANNException("num_branches must be an integer >= 1.")
+            raise FLANNException('num_branches must be an integer >= 1.')
 
         num_branches = int(num_branches)
 
@@ -606,10 +607,10 @@ class FLANN(object):
         self.__ensureRandomSeed(kwargs)
 
         params = {
-            "iterations": max_iterations,
-            "algorithm": "kmeans",
-            "branching": branch_size,
-            "random_seed": kwargs["random_seed"],
+            'iterations': max_iterations,
+            'algorithm': 'kmeans',
+            'branching': branch_size,
+            'random_seed': kwargs['random_seed'],
         }
 
         self.__flann_parameters.update(params)
@@ -618,7 +619,7 @@ class FLANN(object):
             pts, npts, dim, num_clusters, result, pointer(self.__flann_parameters)
         )
         if numclusters <= 0:
-            raise FLANNException("Error occured during clustering procedure.")
+            raise FLANNException('Error occured during clustering procedure.')
 
         if dtype is None:
             return result
@@ -629,8 +630,8 @@ class FLANN(object):
     # internal bookkeeping functions
 
     def __ensureRandomSeed(self, kwargs):
-        if "random_seed" not in kwargs:
-            kwargs["random_seed"] = self.__rn_gen.randint(2 ** 30)
+        if 'random_seed' not in kwargs:
+            kwargs['random_seed'] = self.__rn_gen.randint(2 ** 30)
 
     ####
     # From the IBEIS fork

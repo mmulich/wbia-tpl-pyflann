@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import pyflann
 import numpy as np
 from numpy import ones
@@ -60,7 +61,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
 
         self.assertTrue(all(correct))
 
-    @pytest.mark.skip("not debugging")
+    @pytest.mark.skip('not debugging')
     def testnn_index_bad_index_call_noindex(self):
         nn = pyflann.FLANN()
         # self.assertRaises(FLANNException, lambda: nn.nn_index(rand(5, 5)))
@@ -69,7 +70,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
         with pytest.raises(pyflann.FLANNException):
             nn.nn_index(rand(5, 5))
 
-    @pytest.mark.skip("not debugging")
+    @pytest.mark.skip('not debugging')
     def testnn_index_bad_index_call_delindex(self):
         nn = pyflann.FLANN()
         nn.build_index(rand(5, 5))
@@ -80,7 +81,7 @@ class Test_PyFLANN_nn_index(unittest.TestCase):
         # self.assertRaises(FLANNException, lambda: nn.nn_index(rand(5, 5)))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     """
     pytest ~/code/flann/test/test_nn_index.py
     xdoctest ~/code/flann/test/test_nn_index.py zero

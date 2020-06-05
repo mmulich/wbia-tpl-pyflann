@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import gc
 import os
 from os.path import *
@@ -9,9 +10,9 @@ from numpy.random import rand
 from pyflann import *
 
 
-_proc_status = "/proc/%d/status" % os.getpid()
+_proc_status = '/proc/%d/status' % os.getpid()
 
-_scale = {"kB": 1024.0, "mB": 1024.0 * 1024.0, "KB": 1024.0, "MB": 1024.0 * 1024.0}
+_scale = {'kB': 1024.0, 'mB': 1024.0 * 1024.0, 'KB': 1024.0, 'MB': 1024.0 * 1024.0}
 
 
 def _VmB(VmKey):
@@ -37,33 +38,33 @@ def _VmB(VmKey):
 def memory(since=0.0):
     """Return memory usage in bytes.
     """
-    return _VmB("VmSize:") - since
+    return _VmB('VmSize:') - since
 
 
 def resident(since=0.0):
     """Return resident memory usage in bytes.
     """
-    return _VmB("VmRSS:") - since
+    return _VmB('VmRSS:') - since
 
 
 def stacksize(since=0.0):
     """Return stack size in bytes.
     """
-    return _VmB("VmStk:") - since
+    return _VmB('VmStk:') - since
 
 
-if __name__ == "__main__":
-    print("Profiling Memory usage for pyflann; CTRL-C to stop.")
-    print("Increasing total process memory, relative to the python memory, ")
-    print("implies a memory leak in the external libs.")
-    print("Increasing python memory implies a memory leak in the python code.")
+if __name__ == '__main__':
+    print('Profiling Memory usage for pyflann; CTRL-C to stop.')
+    print('Increasing total process memory, relative to the python memory, ')
+    print('implies a memory leak in the external libs.')
+    print('Increasing python memory implies a memory leak in the python code.')
 
     h = hpy()
 
     while True:
         s = str(h.heap())
 
-        print("Python: %s;    Process Total: %s" % (s[: s.find("\n")], memory()))
+        print('Python: %s;    Process Total: %s' % (s[: s.find('\n')], memory()))
 
         X1 = rand(50000, 2)
         X2 = rand(50000, 2)

@@ -76,7 +76,7 @@ public:
     {
         clock_t stopTime = clock();
         value += ( (double)stopTime - startTime) / CLOCKS_PER_SEC;
-        
+
         return value;
     }
 

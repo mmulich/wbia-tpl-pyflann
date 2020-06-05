@@ -8,7 +8,7 @@ notes:
     # Then run the multibuild in docker followed by a test in a different
     # docker container
 
-    # BETTER TODO: 
+    # BETTER TODO:
     # Use a build stage to build in the multilinux environment and then
     # use a test stage with a different image to test and deploy the wheel
     docker run --rm -it --entrypoint="" docker:dind sh
@@ -16,7 +16,7 @@ notes:
     docker run --rm -v $PWD:/io -it --entrypoint="" docker:latest sh
 
     docker run --rm -v $PWD:/io -it python:2.7 bash
-     
+
         cd /io
         pip install -r requirements.txt
         pip install pygments
@@ -44,7 +44,7 @@ MB_PYTHON_TAG=cp27-cp27m ./run_multibuild.sh
 get_native_mb_python_tag(){
     __heredoc__='''
     Get the MB tag for the current version of python running
-    
+
     https://stackoverflow.com/questions/53409511/what-is-the-difference-between-cpython-27m-and-27mu?noredirect=1&lq=1
     '''
     python -c "
