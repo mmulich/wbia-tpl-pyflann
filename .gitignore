@@ -4,6 +4,7 @@
 *.egg-info
 _skbuild
 pyflann/lib
+pip-wheel-metadata/
 
 *.save
 flann.kdev4
