@@ -7,3 +7,6 @@ exclude = '''
     \.git
 )/
 '''
+
+[build-system]
+requires = ["setuptools", "wheel", "scikit-build", "cmake", "ninja"]

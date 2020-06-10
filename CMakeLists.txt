@@ -27,7 +27,7 @@ ${cmd}\"\"\"")
   string(STRIP "${_output}" _output)
   set(${outvar} "${_output}" PARENT_SCOPE)
 endfunction()
-_pycmd(PYFLANN_VERSION "import setup; print(setup.version)")
+_pycmd(PYFLANN_VERSION "import setup; print(setup.VERSION)")
 
 message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
 
