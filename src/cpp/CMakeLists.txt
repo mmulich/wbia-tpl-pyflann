@@ -16,20 +16,31 @@ file(GLOB_RECURSE C_SOURCES flann.cpp)
 file(GLOB_RECURSE CPP_SOURCES flann_cpp.cpp)
 file(GLOB_RECURSE CU_SOURCES *.cu)
 
-set(FAKE_C_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
-set(FAKE_CU_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
-set(FAKE_CPP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
-
 add_library(flann_cpp_s STATIC ${CPP_SOURCES})
 target_link_libraries(flann_cpp_s ${LZ4_LIBRARIES})
+target_link_libraries(flann_cpp_s ${OpenMP_LIBRARIES})
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set_target_properties(flann_cpp_s PROPERTIES COMPILE_FLAGS -fPIC)
 endif()
+
 set_property(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC FLANN_USE_CUDA)
+
+if (BUILD_C_BINDINGS)
+    add_library(flann_s STATIC ${C_SOURCES})
+    target_link_libraries(flann_s ${LZ4_LIBRARIES})
+    target_link_libraries(flann_s ${OpenMP_LIBRARIES})
+
+    if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+        set_target_properties(flann_s PROPERTIES COMPILE_FLAGS -fPIC)
+    endif()
+
+    set_property(TARGET flann_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
+endif()
 
 if (BUILD_CUDA_LIB)
     SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-DFLANN_USE_CUDA")
+
     if(CMAKE_COMPILER_IS_GNUCC)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-fPIC;" )
         if (NVCC_COMPILER_BINDIR)
@@ -38,101 +49,116 @@ if (BUILD_CUDA_LIB)
     else()
 	    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};" )
     endif()
+
     cuda_add_library(flann_cuda_s STATIC ${CU_SOURCES})
+
     set_property(TARGET flann_cuda_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
 endif()
 
-if(OS_IS_LINUX OR OS_IS_MACOS)
-    add_library(flann_cpp SHARED ${FAKE_CPP_SOURCES})
-    set_target_properties(flann_cpp PROPERTIES LINKER_LANGUAGE CXX)
-    target_link_libraries(flann_cpp flann_cpp_s)
+add_library(flann_cpp SHARED "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
 
-    if (OS_IS_LINUX AND BUILD_CUDA_LIB)
-        cuda_add_library(flann_cuda SHARED ${FAKE_CU_SOURCES})
-        set_target_properties(flann_cuda PROPERTIES LINKER_LANGUAGE CXX)
-        target_link_libraries(flann_cuda flann_cuda_s)
-        set_property(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_USE_CUDA)
-    # 	target_link_libraries(flann_cuda cudpp_x86_64)
-    endif()
-else()
-    add_library(flann_cpp SHARED ${CPP_SOURCES})
-    target_link_libraries(flann_cpp -W ${LZ4_LIBRARIES} -W)
-    # export lz4 headers, so that MSVC to creates flann_cpp.lib
-    set_target_properties(flann_cpp PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
+if (BUILD_C_BINDINGS)
+    add_library(flann SHARED "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
+endif ()
+
+if (BUILD_CUDA_LIB)
+    cuda_add_library(flann_cuda SHARED "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
+endif ()
+
+if (OS_IS_LINUX)
+    set_target_properties(flann_cpp PROPERTIES LINKER_LANGUAGE CXX)
+    set_target_properties(flann_cpp PROPERTIES
+        LINK_FLAGS "-Wl,--whole-archive"
+    )
+
+    if (BUILD_C_BINDINGS)
+        set_target_properties(flann PROPERTIES LINKER_LANGUAGE CXX)
+        set_target_properties(flann PROPERTIES
+            LINK_FLAGS "-Wl,--whole-archive"
+        )
+    endif ()
+
     if (BUILD_CUDA_LIB)
-		cuda_add_library(flann_cuda SHARED ${CPP_SOURCES})
-        set_property(TARGET flann_cpp PROPERTY COMPILE_DEFINITIONS FLANN_USE_CUDA)
-    endif()
-endif()
+        set_target_properties(flann_cuda PROPERTIES LINKER_LANGUAGE CXX)
+        set_target_properties(flann_cuda PROPERTIES
+            LINK_FLAGS "-Wl,--whole-archive"
+        )
+    endif ()
+elseif (OS_IS_MACOS)
+    set_target_properties(flann_cpp PROPERTIES
+        LINK_FLAGS "-Wl,-all_load"
+    )
+
+    if (BUILD_C_BINDINGS)
+        set_target_properties(flann PROPERTIES
+            LINK_FLAGS "-Wl,-all_load"
+        )
+    endif ()
+else ()
+    set_target_properties(flann_cpp PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
+    set_target_properties(flann_cpp PROPERTIES
+        LINK_FLAGS "/WHOLEARCHIVE"
+    )
+
+    if (BUILD_C_BINDINGS)
+        set_target_properties(flann PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
+        set_target_properties(flann PROPERTIES
+            LINK_FLAGS "/WHOLEARCHIVE"
+        )
+        if(OPENMP_FOUND)
+        endif()
+    endif ()
+
+    if (BUILD_CUDA_LIB)
+        set_target_properties(flann_cuda PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
+        set_target_properties(flann_cuda PROPERTIES
+            LINK_FLAGS "/WHOLEARCHIVE"
+        )
+    endif ()
+endif ()
+
+target_link_libraries(flann_cpp flann_cpp_s)
+
+if (BUILD_C_BINDINGS)
+    target_link_libraries(flann flann_s)
+endif ()
+
+if (BUILD_CUDA_LIB)
+    target_link_libraries(flann_cpp_cuda flann_cuda_s)
+    #   target_link_libraries(flann_cuda cudpp_x86_64)
+endif ()
 
 set_target_properties(flann_cpp PROPERTIES
-   VERSION ${PYFLANN_VERSION}
-   SOVERSION ${FLANN_SOVERSION}
-   DEFINE_SYMBOL FLANN_EXPORTS
+    VERSION ${PYFLANN_VERSION}
+    SOVERSION ${FLANN_SOVERSION}
+    DEFINE_SYMBOL FLANN_EXPORTS
 )
+
+if (BUILD_C_BINDINGS)
+    set_target_properties(flann PROPERTIES
+        VERSION ${PYFLANN_VERSION}
+        SOVERSION ${FLANN_SOVERSION}
+        DEFINE_SYMBOL FLANN_EXPORTS
+    )
+endif ()
 
 if (BUILD_CUDA_LIB)
     set_target_properties(flann_cuda PROPERTIES
-       VERSION ${PYFLANN_VERSION}
-       SOVERSION ${FLANN_SOVERSION}
-       DEFINE_SYMBOL FLANN_EXPORTS
-    )
-endif()
-
-
-if (USE_MPI AND HDF5_IS_PARALLEL AND NOT SKBUILD)
-    add_executable(flann_mpi_server flann/mpi/flann_mpi_server.cpp)
-    target_link_libraries(flann_mpi_server flann_cpp ${HDF5_LIBRARIES} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
-
-    add_executable(flann_mpi_client flann/mpi/flann_mpi_client.cpp)
-    target_link_libraries(flann_mpi_client flann_cpp ${HDF5_LIBRARIES} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
-
-    install (TARGETS flann_mpi_client flann_mpi_server
-        DESTINATION bin)
-endif()
-
-
-if (BUILD_C_BINDINGS)
-    add_library(flann_s STATIC ${C_SOURCES})
-    target_link_libraries(flann_s -W ${LZ4_LIBRARIES} -W)
-    if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-        set_target_properties(flann_s PROPERTIES COMPILE_FLAGS -fPIC)
-    endif()
-    set_property(TARGET flann_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
-
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_COMPILER_IS_GNUCC)
-        add_library(flann SHARED ${FAKE_C_SOURCES})
-        set_target_properties(flann PROPERTIES LINKER_LANGUAGE CXX)
-        target_link_libraries(flann flann_s)
-    else()
-        add_library(flann SHARED ${C_SOURCES})
-        target_link_libraries(flann -W ${LZ4_LIBRARIES} -W)
-
-        if(MINGW AND OPENMP_FOUND)
-            target_link_libraries(flann gomp)
-        endif()
-    endif()
-
-    message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
-    message(STATUS "FLANN_SOVERSION = ${FLANN_SOVERSION}")
-    set_target_properties(flann PROPERTIES
         VERSION ${PYFLANN_VERSION}
         SOVERSION ${FLANN_SOVERSION}
         DEFINE_SYMBOL FLANN_EXPORTS
     )
 endif()
 
-
 if(NOT SKBUILD)
     if(WIN32)
-    if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
-        install (
-            TARGETS flann
-            RUNTIME DESTINATION share/flann/matlab
-        )
-    endif()
+        if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
+            install (
+                TARGETS flann
+                RUNTIME DESTINATION share/flann/matlab
+            )
+        endif()
     endif(WIN32)
-
 
     install (
         TARGETS flann_cpp flann_cpp_s
@@ -143,9 +169,9 @@ if(NOT SKBUILD)
         ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
     )
 
-    if (BUILD_CUDA_LIB)
+    if (BUILD_C_BINDINGS)
         install (
-            TARGETS flann_cuda flann_cuda_s
+            TARGETS flann flann_s
             EXPORT ${targets_export_name}
             INCLUDES DESTINATION include
             RUNTIME DESTINATION bin
@@ -154,9 +180,9 @@ if(NOT SKBUILD)
         )
     endif()
 
-    if (BUILD_C_BINDINGS)
+    if (BUILD_CUDA_LIB)
         install (
-            TARGETS flann flann_s
+            TARGETS flann_cuda flann_cuda_s
             EXPORT ${targets_export_name}
             INCLUDES DESTINATION include
             RUNTIME DESTINATION bin
@@ -172,6 +198,17 @@ if(NOT SKBUILD)
     )
 
 else()
+    if (USE_MPI AND HDF5_IS_PARALLEL)
+        add_executable(flann_mpi_server flann/mpi/flann_mpi_server.cpp)
+        target_link_libraries(flann_mpi_server flann_cpp ${HDF5_LIBRARIES} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+        add_executable(flann_mpi_client flann/mpi/flann_mpi_client.cpp)
+        target_link_libraries(flann_mpi_client flann_cpp ${HDF5_LIBRARIES} ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+        install (TARGETS flann_mpi_client flann_mpi_server
+            DESTINATION bin)
+    endif()
+
     # Only install the library files when building with skbuild
     install (
         TARGETS flann_cpp flann_cpp_s
@@ -179,10 +216,22 @@ else()
         LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
     )
-    install (
-        TARGETS flann flann_s
-        EXPORT ${targets_export_name}
-        LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
-        ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
-    )
+
+    if (BUILD_C_BINDINGS)
+        install (
+            TARGETS flann flann_s
+            EXPORT ${targets_export_name}
+            LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
+            ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        )
+    endif ()
+
+    if (BUILD_CUDA_LIB)
+        install (
+            TARGETS flann_cuda flann_cuda_s
+            EXPORT ${targets_export_name}
+            LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
+            ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        )
+    endif()
 endif()
