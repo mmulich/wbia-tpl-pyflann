@@ -24,6 +24,7 @@ test/flann_uint_autotune.py
 # Build files
 ###
 src/python
+src/cpp/flann/config.h
 cmake-builds/*
 tmp
 *.pyc
