@@ -67,64 +67,39 @@ endif ()
 
 if (OS_IS_LINUX)
     set_target_properties(flann_cpp PROPERTIES LINKER_LANGUAGE CXX)
-    set_target_properties(flann_cpp PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
+    set(LINK_FLAG_PREFIX "-Wl,--whole-archive")
+    set(LINK_FLAG_POSTFIX "-Wl,--no-whole-archive")
 
     if (BUILD_C_BINDINGS)
         set_target_properties(flann PROPERTIES LINKER_LANGUAGE CXX)
-        set_target_properties(flann PROPERTIES
-            LINK_FLAGS "-Wl,--whole-archive"
-        )
     endif ()
 
     if (BUILD_CUDA_LIB)
         set_target_properties(flann_cuda PROPERTIES LINKER_LANGUAGE CXX)
-        set_target_properties(flann_cuda PROPERTIES
-            LINK_FLAGS "-Wl,--whole-archive"
-        )
     endif ()
 elseif (OS_IS_MACOS)
-    set_target_properties(flann_cpp PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-
-    if (BUILD_C_BINDINGS)
-        set_target_properties(flann PROPERTIES
-            LINK_FLAGS "-Wl,-all_load"
-        )
-    endif ()
+    set(LINK_FLAG_PREFIX "-Wl,-all_load")
 else ()
     set_target_properties(flann_cpp PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
-    set_target_properties(flann_cpp PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
-    )
+    set(LINK_FLAG_PREFIX "/WHOLEARCHIVE")
 
     if (BUILD_C_BINDINGS)
         set_target_properties(flann PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
-        set_target_properties(flann PROPERTIES
-            LINK_FLAGS "/WHOLEARCHIVE"
-        )
-        if(OPENMP_FOUND)
-        endif()
     endif ()
 
     if (BUILD_CUDA_LIB)
         set_target_properties(flann_cuda PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
-        set_target_properties(flann_cuda PROPERTIES
-            LINK_FLAGS "/WHOLEARCHIVE"
-        )
     endif ()
 endif ()
 
-target_link_libraries(flann_cpp flann_cpp_s)
+target_link_libraries(flann_cpp ${LINK_FLAG_PREFIX} flann_cpp_s ${LINK_FLAG_POSTFIX})
 
 if (BUILD_C_BINDINGS)
-    target_link_libraries(flann flann_s)
+    target_link_libraries(flann ${LINK_FLAG_PREFIX} flann_s ${LINK_FLAG_POSTFIX})
 endif ()
 
 if (BUILD_CUDA_LIB)
-    target_link_libraries(flann_cpp_cuda flann_cuda_s)
+    target_link_libraries(flann_cpp_cuda ${LINK_FLAG_PREFIX} flann_cuda_s ${LINK_FLAG_POSTFIX})
     #   target_link_libraries(flann_cuda cudpp_x86_64)
 endif ()
 
