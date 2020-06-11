@@ -16,19 +16,13 @@ file(GLOB_RECURSE C_SOURCES flann.cpp)
 file(GLOB_RECURSE CPP_SOURCES flann_cpp.cpp)
 file(GLOB_RECURSE CU_SOURCES *.cu)
 
-
-# I don't know why C bindings had no sources in their library.
-# Newer cmakes seem to require at least one sourcefile in add_library calls
-# Older CMake versions didn't need this. Giving it a header fixes the issue.
-#set(FAKE_C_SOURCES "")
-#set(FAKE_CU_SOURCES "")
-#set(FAKE_CPP_SOURCES "")
 set(FAKE_C_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
 set(FAKE_CU_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
 set(FAKE_CPP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/flann/flann.h")
 
 add_library(flann_cpp_s STATIC ${CPP_SOURCES})
 target_link_libraries(flann_cpp_s ${LZ4_LIBRARIES})
+
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set_target_properties(flann_cpp_s PROPERTIES COMPILE_FLAGS -fPIC)
 endif()
@@ -37,10 +31,10 @@ set_property(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC FLANN_
 if (BUILD_CUDA_LIB)
     SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-DFLANN_USE_CUDA")
     if(CMAKE_COMPILER_IS_GNUCC)
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-fPIC;" )
-      if (NVCC_COMPILER_BINDIR)
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--compiler-bindir=${NVCC_COMPILER_BINDIR}")
-      endif()
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-Xcompiler;-fPIC;" )
+        if (NVCC_COMPILER_BINDIR)
+            set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--compiler-bindir=${NVCC_COMPILER_BINDIR}")
+        endif()
     else()
 	    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};" )
     endif()
@@ -48,13 +42,13 @@ if (BUILD_CUDA_LIB)
     set_property(TARGET flann_cuda_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
 endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_COMPILER_IS_GNUCC)
+if(OS_IS_LINUX OR OS_IS_MACOS)
     add_library(flann_cpp SHARED ${FAKE_CPP_SOURCES})
     set_target_properties(flann_cpp PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(flann_cpp -Wl,-whole-archive flann_cpp_s -Wl,-no-whole-archive)
 
-    if (BUILD_CUDA_LIB)
-      cuda_add_library(flann_cuda SHARED ${FAKE_CU_SOURCES})
+    if (OS_IS_LINUX AND BUILD_CUDA_LIB)
+        cuda_add_library(flann_cuda SHARED ${FAKE_CU_SOURCES})
         set_target_properties(flann_cuda PROPERTIES LINKER_LANGUAGE CXX)
         target_link_libraries(flann_cuda -Wl,-whole-archive flann_cuda_s -Wl,-no-whole-archive)
         set_property(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_USE_CUDA)
@@ -115,23 +109,21 @@ if (BUILD_C_BINDINGS)
         target_link_libraries(flann -W ${LZ4_LIBRARIES} -W)
 
         if(MINGW AND OPENMP_FOUND)
-          target_link_libraries(flann gomp)
+            target_link_libraries(flann gomp)
         endif()
     endif()
 
     message(STATUS "PYFLANN_VERSION = ${PYFLANN_VERSION}")
     message(STATUS "FLANN_SOVERSION = ${FLANN_SOVERSION}")
     set_target_properties(flann PROPERTIES
-       VERSION ${PYFLANN_VERSION}
-       SOVERSION ${FLANN_SOVERSION}
-       DEFINE_SYMBOL FLANN_EXPORTS
+        VERSION ${PYFLANN_VERSION}
+        SOVERSION ${FLANN_SOVERSION}
+        DEFINE_SYMBOL FLANN_EXPORTS
     )
 endif()
 
 
 if(NOT SKBUILD)
-    # Skip this part if running via setup.py
-
     if(WIN32)
     if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
         install (
