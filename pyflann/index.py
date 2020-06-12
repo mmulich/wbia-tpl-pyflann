@@ -289,7 +289,7 @@ class FLANN(object):
 
         return params
 
-    def add_points(self, pts, rebuild_threshold=2.0):
+    def add_points(self, pts, rebuild_threshold=2):
         """
         Adds points to pre-built index.
 
@@ -305,9 +305,10 @@ class FLANN(object):
         if pts.dtype.type != self.__curindex_type:
             raise FLANNException('New points must have the same type')
         pts = ensure_2d_array(pts, default_flags)
-        npts, dim = pts.shape
+
+        npts = pts.shape[0]
         flann.add_points[self.__curindex_type](
-            self.__curindex, pts, npts, dim, rebuild_threshold
+            self.__curindex, pts, npts, rebuild_threshold
         )
         self.__curindex_data = np.row_stack((self.__curindex_data, pts))
         self.__added_data.append(pts)

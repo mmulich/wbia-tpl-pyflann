@@ -19,6 +19,10 @@ test/flann_multithreaded_test
 test/flann_simple_test
 test/flann_uint_autotune.py
 
+htmlcov/
+index.dat
+test1.flann
+test2.flann
 
 ###
 # Build files
