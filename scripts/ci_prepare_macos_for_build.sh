@@ -8,6 +8,7 @@ export CUR_LOC="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 
 # Install system dependencies
 brew install lz4
+brew install hdf5
 
 
 # Install Python package dependencies
